@@ -13,7 +13,6 @@ use App\Http\Controllers\FolderController;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
-
 Route::group(['as' => 'folder.', 'prefix' => '/folder'], function () {
     // Get folder list
     Route::get('/list', [FolderController::class, 'list'])->name('list');

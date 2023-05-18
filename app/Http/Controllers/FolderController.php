@@ -238,7 +238,7 @@ class FolderController extends Controller
         if (!file_exists($to)) {
             mkdir($to, config('file-browser.permissions.folder'), true);
         }
-
+        // Move folder
         rename($from, $to);
 
         // Return new folder / file path as result
@@ -263,7 +263,7 @@ class FolderController extends Controller
                 'errors' => [self::FILE_BROWSER_NOT_EXIST]
             ], 404);
         }
-
+        // Remove folder with contents
         try {
             $this->recursiveRemove($path);
         } catch (\Exception $e) {
@@ -416,10 +416,14 @@ class FolderController extends Controller
         foreach ($list as $entity) {
             if (!$entity->isDot() && ($entity->isFile() || $entity->isDir())) {
                 if ($entity->isDir()) {
+                    // Increase folder number
                     $values['folders']++;
+                    // Figure out folder size
                     $values = $this->recursiveSize($entity->getPathname(), $values);
                 } else {
+                    // Increase file number
                     $values['files']++;
+                    // Get file size
                     $values['size'] += $entity->getSize();
                 }
             }
