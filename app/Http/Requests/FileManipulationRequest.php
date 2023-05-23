@@ -2,10 +2,9 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
-
-class FolderPathRequest extends AbstractRequest
+class FileManipulationRequest extends AbstractRequest
 {
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -14,7 +13,8 @@ class FolderPathRequest extends AbstractRequest
     public function rules(): array
     {
         return [
-            'path' => ['required', 'string']
+            'from' => ['required', 'string'],
+            'to' => ['required', 'string']
         ];
     }
 
@@ -26,7 +26,7 @@ class FolderPathRequest extends AbstractRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'path' => $this->request->get('path', DIRECTORY_SEPARATOR)
+            'from' => $this->request->get('from') !== DIRECTORY_SEPARATOR ? $this->request->get('from') : null
         ]);
     }
 }

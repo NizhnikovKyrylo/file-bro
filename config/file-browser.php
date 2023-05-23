@@ -26,7 +26,7 @@ return [
     |
     */
     'restricted' => [
-        //' . avi', 'image / gif', 'iso'
+        //'.php', 'image/gif', 'iso'
     ]
     /*'mime-types' => [
         'archive' => [

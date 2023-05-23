@@ -2,36 +2,34 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\{FolderDestinationRequest, FolderPathRequest};
+use App\Http\Requests\{FileManipulationRequest, FilePathExistsRequest};
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Str;
 
-class FolderController extends Controller
+class FolderController extends AbstractFileController
 {
-    const FILE_BROWSER_NOT_EXIST = 'The file or folder on the given path does not exist.';
-
-    const FILE_BROWSER_PERM_DENY = 'Cannot access the directory. Permission denied.';
-
     /**
      * Retrieve a list of folder containment
      *
-     * @param FolderPathRequest $request
+     * @param FilePathExistsRequest $request
      * @return JsonResponse
      */
-    public function list(FolderPathRequest $request): JsonResponse
+    public function list(FilePathExistsRequest $request): JsonResponse
     {
         // Folder path
-        $path = $this->prettyPath(config('file-browser.entry') . DIRECTORY_SEPARATOR . $request->validated('path'));
+        $path = $this->fullPath($request->validated('path'));
         // Check if folder exists
         if (!file_exists($path) || !is_dir($path)) {
             return response()->json([
                 'errors' => [self::FILE_BROWSER_NOT_EXIST]
             ], 404);
         }
+
         // Folder content
         $result = [];
+
         // Get folder file list
         $list = new \DirectoryIterator($this->finish($path));
+
         // Iterate through the files
         foreach ($list as $entity) {
             // Check instance is file or folder
@@ -46,32 +44,24 @@ class FolderController extends Controller
     /**
      * Get folder properties
      *
-     * @param FolderPathRequest $request
+     * @param FilePathExistsRequest $request
      * @return JsonResponse
      */
-    public function properties(FolderPathRequest $request): JsonResponse
+    public function properties(FilePathExistsRequest $request): JsonResponse
     {
         // Folder path
-        $path = $this->prettyPath(config('file-browser.entry') . DIRECTORY_SEPARATOR . $request->validated('path'));
+        $path = $this->fullPath($request->validated('path'));
         // Check if folder exists
         if (!file_exists($path) || !is_dir($path)) {
             return response()->json([
                 'errors' => [self::FILE_BROWSER_NOT_EXIST]
             ], 404);
         }
-        // Get file or folder info
-        $entity = new \SplFileInfo($path);
+
         // Get folder size and folder properties
         return response()->json(array_merge(
             $this->recursiveSize($path),
-            [
-                'path' => substr($this->finish($entity->getPathname()), strlen(config('file-browser.entry'))),
-                'ctime' => $entity->getCTime(),
-                'mtime' => $entity->getMTime(),
-                'atime' => $entity->getATime(),
-                'type' => $entity->getType(),
-                'filename' => $entity->getFileName()
-            ]
+            $this->fileInfo($path)
         ));
     }
 
@@ -79,19 +69,13 @@ class FolderController extends Controller
      * Search file or folder in filesystem
      *
      * @param string $str
-     * @param FolderPathRequest $request
+     * @param FilePathExistsRequest $request
      * @return JsonResponse
      */
-    public function search(string $str, FolderPathRequest $request): JsonResponse
+    public function search(string $str, FilePathExistsRequest $request): JsonResponse
     {
         // Folder path
-        $path = $this->prettyPath(config('file-browser.entry') . DIRECTORY_SEPARATOR . $request->validated('path'));
-        // Check if folder exists
-        if (!file_exists($path) || !is_dir($path)) {
-            return response()->json([
-                'errors' => [self::FILE_BROWSER_NOT_EXIST]
-            ], 404);
-        }
+        $path = $this->fullPath($request->validated('path'));
 
         return response()->json($this->recursiveSearch($str, $path));
     }
@@ -99,13 +83,13 @@ class FolderController extends Controller
     /**
      * Get folder size in bytes
      *
-     * @param FolderPathRequest $request
+     * @param FilePathExistsRequest $request
      * @return JsonResponse
      */
-    public function size(FolderPathRequest $request): JsonResponse
+    public function size(FilePathExistsRequest $request): JsonResponse
     {
         // Folder path
-        $path = $this->prettyPath(config('file-browser.entry') . DIRECTORY_SEPARATOR . $request->validated('path'));
+        $path = $this->fullPath($request->validated('path'));
         // Check if folder exists
         if (!file_exists($path) || !is_dir($path)) {
             return response()->json([
@@ -121,13 +105,16 @@ class FolderController extends Controller
     /**
      * Create folder
      *
-     * @param FolderPathRequest $request
+     * @param FilePathExistsRequest $request
      * @return JsonResponse
      */
-    public function create(FolderPathRequest $request): JsonResponse
+    public function create(FilePathExistsRequest $request): JsonResponse
     {
         // Folder path
-        $path = $this->prettyPath(config('file-browser.entry') . DIRECTORY_SEPARATOR . $request->validated('path'));
+        $path = $this->fullPath($request->validated('path'));
+
+        $info = pathinfo($path);
+        $path = $info['dirname'] . DIRECTORY_SEPARATOR . $this->escapeName($info['filename']);
         // Create folder if not exists
         try {
             if (!file_exists($path)) {
@@ -147,32 +134,21 @@ class FolderController extends Controller
     /**
      * Copy folder with files
      *
-     * @param FolderDestinationRequest $request
+     * @param FileManipulationRequest $request
      * @return JsonResponse
      */
-    public function copy(FolderDestinationRequest $request): JsonResponse
+    public function copy(FileManipulationRequest $request): JsonResponse
     {
         // Source folder path
-        $from = $this->prettyPath(config('file-browser.entry') . DIRECTORY_SEPARATOR . $request->validated('from'));
+        $from = $this->fullPath($request->validated('from'));
         // Check if source folder exists
         if (!file_exists($from) || !is_dir($from)) {
             return response()->json([
                 'errors' => [self::FILE_BROWSER_NOT_EXIST]
             ], 404);
         }
-        // Destination path
-        $to = $this->prettyPath(config('file-browser.entry') . DIRECTORY_SEPARATOR . $request->validated('to'));
-        if (!file_exists($to)) {
-            mkdir($to, config('file-browser.permissions.folder'), true);
-        }
-        // Copy folder
-        try {
-            $this->recurseCopy($from, $to);
-        } catch (\Exception $e) {
-            return response()->json([
-                'errors' => [static::FILE_BROWSER_PERM_DENY, $e->getMessage()]
-            ], 403);
-        }
+
+        $to = $this->copyFolder($from, $request->validated('to'));
 
         return response()->json([
             'path' => substr($to, strlen(config('file-browser.entry')))
@@ -180,66 +156,35 @@ class FolderController extends Controller
     }
 
     /**
-     * Rename folder or file
-     *
-     * @param FolderDestinationRequest $request
-     * @return JsonResponse
-     */
-    public function rename(FolderDestinationRequest $request): JsonResponse
-    {
-        $from = $this->prettyPath(config('file-browser.entry') . DIRECTORY_SEPARATOR . $request->validated('from'));
-        // Check if source folder exists
-        if (!file_exists($from) || !is_dir($from)) {
-            return response()->json([
-                'errors' => [self::FILE_BROWSER_NOT_EXIST]
-            ], 404);
-        }
-        // Check if last symbol is '/'
-        if (strrpos($from, DIRECTORY_SEPARATOR) !== false) {
-            $from = substr($from, 0, -1);
-        }
-        // New file or folder name
-        $to = $this->prettyPath(
-            $this->finish(substr($from, 0, strrpos($from, '/'))) . // Get $from parent folder
-            $this->escapeName($request->validated('to')) // Escape destination filename
-        );
-        // Run renaming
-        try {
-            rename($from, $to);
-        } catch (\Exception $e) {
-            return response()->json([
-                'errors' => [static::FILE_BROWSER_PERM_DENY, $e->getMessage()]
-            ], 403);
-        }
-        // Return new folder / file path as result
-        return response()->json([
-            'path' => substr($to, strlen(config('file-browser.entry')))
-        ]);
-    }
-
-    /**
      * Move folder
      *
-     * @param FolderDestinationRequest $request
+     * @param FileManipulationRequest $request
      * @return JsonResponse
      */
-    public function move(FolderDestinationRequest $request): JsonResponse
+    public function move(FileManipulationRequest $request): JsonResponse
     {
-        $from = $this->prettyPath(config('file-browser.entry') . DIRECTORY_SEPARATOR . $request->validated('from'));
+        $from = $this->fullPath($request->validated('from'));
         // Check if source folder exists
         if (!file_exists($from) || !is_dir($from)) {
             return response()->json([
                 'errors' => [self::FILE_BROWSER_NOT_EXIST]
             ], 404);
         }
-        $folder_name = pathinfo($from, PATHINFO_FILENAME);
+
         // Destination path
-        $to = $this->prettyPath(config('file-browser.entry') . DIRECTORY_SEPARATOR . $request->validated('to') . DIRECTORY_SEPARATOR . $folder_name);
+        $to = $this->fullPath($request->validated('to'));
         if (!file_exists($to)) {
             mkdir($to, config('file-browser.permissions.folder'), true);
         }
-        // Move folder
-        rename($from, $to);
+
+        // If folder is empty just rename it
+        if (empty(glob($to . '/*'))) {
+            rename($from, $to);
+        } else {
+            // Move folder
+            $to = $this->copyFolder($from, $request->validated('to'));
+            $this->recursiveRemove($from);
+        }
 
         // Return new folder / file path as result
         return response()->json([
@@ -248,15 +193,15 @@ class FolderController extends Controller
     }
 
     /**
-     * Remove folder
+     * Remove folder or file
      *
-     * @param FolderPathRequest $request
+     * @param FilePathExistsRequest $request
      * @return JsonResponse
      */
-    public function remove(FolderPathRequest $request): JsonResponse
+    public function remove(FilePathExistsRequest $request): JsonResponse
     {
         // Folder path
-        $path = $this->prettyPath(config('file-browser.entry') . DIRECTORY_SEPARATOR . $request->validated('path'));
+        $path = $this->fullPath($request->validated('path'));
         // Check if folder exists
         if (!file_exists($path) || !is_dir($path)) {
             return response()->json([
@@ -300,18 +245,6 @@ class FolderController extends Controller
     }
 
     /**
-     * Finish a string with an instance of a given value.
-     *
-     * @param string $str
-     * @param string $cap
-     * @return string
-     */
-    protected function finish(string $str, string $cap = DIRECTORY_SEPARATOR): string
-    {
-        return str_ends_with($str, $cap) ? $str : $str . $cap;
-    }
-
-    /**
      * Begin a string with an instance of a given value.
      *
      * @param string $str
@@ -324,13 +257,30 @@ class FolderController extends Controller
     }
 
     /**
-     * Remove double slashes
-     * @param string $path
+     * Run folder copy
+     *
+     * @param string $from
+     * @param string $to
      * @return string
      */
-    protected function prettyPath(string $path): string
+    protected function copyFolder(string $from, string $to): string
     {
-        return preg_replace('/\/+/', '/', $path);
+        // Destination path
+        $to = $this->fullPath($to);
+        if (!file_exists($to)) {
+            mkdir($to, config('file-browser.permissions.folder'), true);
+        }
+
+        // Copy folder
+        try {
+            $this->recurseCopy($from, $to);
+        } catch (\Exception $e) {
+            return response()->json([
+                'errors' => [static::FILE_BROWSER_PERM_DENY, $e->getMessage()]
+            ], 403);
+        }
+
+        return $to;
     }
 
     /**
@@ -367,71 +317,6 @@ class FolderController extends Controller
     }
 
     /**
-     * Recursive remove folder
-     *
-     * @param string $path
-     */
-    protected function recursiveRemove(string $path): void
-    {
-        if (file_exists($path)) {
-            if (is_file($path)) {
-                unlink($path);
-            } else {
-                $files = new \DirectoryIterator($path);
-
-                foreach ($files as $file) {
-                    if (!$file->isDot()) {
-                        if ($file->isDir()) {
-                            $this->recursiveRemove($file->getPathname());
-                        } else {
-                            unlink($file->getPathname());
-                        }
-                    }
-                }
-
-                rmdir($path);
-            }
-        }
-    }
-
-    /**
-     * Get folder size and content counts
-     *
-     * @param string $src
-     * @param array $values
-     * @return array
-     */
-    protected function recursiveSize(
-        string $src,
-        array  $values = [
-            'files' => 0,
-            'folders' => 0,
-            'size' => 0
-        ]
-    ): array
-    {
-        // Folder content
-        $list = new \DirectoryIterator($this->finish($src));
-
-        foreach ($list as $entity) {
-            if (!$entity->isDot() && ($entity->isFile() || $entity->isDir())) {
-                if ($entity->isDir()) {
-                    // Increase folder number
-                    $values['folders']++;
-                    // Figure out folder size
-                    $values = $this->recursiveSize($entity->getPathname(), $values);
-                } else {
-                    // Increase file number
-                    $values['files']++;
-                    // Get file size
-                    $values['size'] += $entity->getSize();
-                }
-            }
-        }
-        return $values;
-    }
-
-    /**
      * Recursive file and folder search
      *
      * @param string $find
@@ -463,18 +348,5 @@ class FolderController extends Controller
         }
 
         return $results;
-    }
-
-    /**
-     * Remove all symbols except latin characters, numbers, dashes and underscores. Remove multiple dashes
-     *
-     * @param string $str
-     * @return string
-     */
-    protected function escapeName(string $str): string
-    {
-        return preg_replace('/-+/', '-',
-            preg_replace('/[^a-zA-Z0-9_-]+/', '-', mb_strtolower(trim(Str::ascii($str))))
-        );
     }
 }
