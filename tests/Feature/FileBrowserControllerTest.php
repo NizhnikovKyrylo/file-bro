@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use Faker\Factory as Faker;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\File;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
@@ -35,7 +36,7 @@ class FileBrowserControllerTest extends TestCase
         $this->root = config('file-browser.entry');
 
         // Seed folders
-        for ($i = 0, $n = mt_rand(2, 4); $i < $n; $i++) {
+        for ($i = 0, $n = mt_rand(3, 8); $i < $n; $i++) {
             $path = $this->root . DIRECTORY_SEPARATOR . implode('/', $this->faker->words(mt_rand(1, 3)));
             if (!file_exists($path)) {
                 mkdir($path, 0755, true);
@@ -59,9 +60,9 @@ class FileBrowserControllerTest extends TestCase
 
     protected function tearDown(): void
     {
-        parent::tearDown();
+        File::deleteDirectory($this->root);
 
-//        $this->recursiveRemove($this->root);
+        parent::tearDown();
     }
 
     /**
@@ -353,7 +354,7 @@ class FileBrowserControllerTest extends TestCase
     public function testSearchFolder(): void
     {
         $search = null;
-        foreach (Arr::random(glob($this->root . '/*', GLOB_ONLYDIR), 5) as $folder) {
+        foreach (Arr::random(glob($this->root . '/*', GLOB_ONLYDIR), 3) as $folder) {
             $inner = glob($folder . '/*', GLOB_ONLYDIR);
             if (!empty($inner)) {
                 $search = pathinfo(substr(Arr::random($inner), strlen($this->root)), PATHINFO_BASENAME);
@@ -427,35 +428,5 @@ class FileBrowserControllerTest extends TestCase
     protected function requestResponse(TestResponse $response): array
     {
         return json_decode($response->content(), 1);
-    }
-
-    /**
-     * Recursive remove folder
-     *
-     * @param string $path
-     */
-    protected function recursiveRemove(string $path): void
-    {
-        if (file_exists($path)) {
-            if (is_file($path)) {
-                // Remove file
-                unlink($path);
-            } else {
-                $files = new \DirectoryIterator($path);
-
-                // If directory is not empty
-                foreach ($files as $file) {
-                    if (!$file->isDot()) {
-                        if ($file->isDir()) {
-                            $this->recursiveRemove($file->getPathname());
-                        } else {
-                            unlink($file->getPathname());
-                        }
-                    }
-                }
-
-                rmdir($path);
-            }
-        }
     }
 }
