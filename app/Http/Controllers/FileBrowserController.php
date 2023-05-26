@@ -10,7 +10,7 @@ use Illuminate\Routing\Controller;
 
 class FileBrowserController extends Controller
 {
-    use AuthorizesRequests, ValidatesRequests;
+    use AuthorizesRequests, FileBrowserTrait, ValidatesRequests;
 
     const FILE_BROWSER_RESTRICTED = 'This type of file is prohibited to upload.';
 
