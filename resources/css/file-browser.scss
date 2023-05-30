@@ -1,0 +1,204 @@
+.file-browser-wrap {
+  background-color: #ebebeb;
+  border: 1px solid #bbbbbb;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 5px;
+  width: 100%;
+
+  * {
+    border: 0;
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: normal;
+    line-height: 1em;
+    margin: 0;
+    padding: 0;
+  }
+  ol, ul {list-style: none}
+
+  button {
+    box-shadow: none;
+    padding: 4px;
+
+    &:hover {
+      background-color: white;
+      color: #000;
+
+      span {color: #000}
+    }
+  }
+
+  .file-browser-actions-wrap {
+    border-bottom: 1px solid #cccccc;
+    border-top: 1px solid #cccccc;
+
+    ul {
+      align-items: center;
+      border-left: 1px solid #cccccc;
+      border-right: 1px solid #cccccc;
+      display: flex;
+      justify-content: flex-start;
+    }
+
+    li {
+      line-height: 0;
+
+      &.separator-tile {
+        height: 30px;
+        border-left: 1px solid #bbbbbb;
+        border-right: 1px solid #cccccc;
+      }
+    }
+
+    button {
+      align-items: center;
+      display: flex;
+      height: 30px;
+      justify-content: center;
+      width: 30px;
+
+      &.active {
+        background-color: #ffffff;
+      }
+    }
+  }
+
+  [data-type] {
+    display: none;
+
+    &.active {
+      display: block;
+    }
+  }
+
+  table {
+    background-color: white;
+    border: 1px solid #000;
+    width: 100%;
+
+    tbody tr:nth-child(even) {background-color: #f0f0f0}
+  }
+
+  .file-browser-panels-wrap {
+    display: flex;
+    justify-content: space-between;
+
+    .file-browser-panel-wrap {width: calc(50% - 2px)}
+
+    .file-browser-bookmark-wrap {
+      margin-top: 5px;
+
+      ul {
+        align-items: flex-end;
+        display: flex;
+        justify-content: flex-start;
+        overflow: hidden;
+
+        li {
+          cursor: pointer;
+          margin-bottom: -1px;
+          padding: 8px 8px 4px 8px;
+
+          &.active {
+            background-color: white;
+            border: 1px solid #000;
+            border-bottom: none;
+            border-top-left-radius: 4px;
+            border-top-right-radius: 4px;
+          }
+        }
+      }
+    }
+
+    .file-browser-panel-content {
+      th, td {padding: 8px 8px 4px 8px; cursor: default}
+
+      thead {
+        tr {border-bottom: 1px solid #cccccc}
+
+        th {
+          border-left: 1px solid #cccccc;
+          user-select: none;
+
+          &:first-child {border-left-color: #000}
+        }
+      }
+    }
+  }
+
+  .file-browser-controls-wrap {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+
+    button {
+      height: 32px;
+      width: 14.28%;
+
+      span {font-weight: bold}
+    }
+  }
+
+  .file-browser-list-wrap {
+    thead th {
+      padding: 10px;
+      user-select: none;
+    }
+
+    td {
+      cursor: default;
+      padding: 8px 8px 4px 8px;
+      vertical-align: middle;
+
+      &:first-child {width: 30px}
+      &:nth-child(3), &:last-child {width: 150px}
+
+      span {white-space: nowrap}
+    }
+  }
+
+  .file-browser-icon {
+    background-color: #000;
+    display: inline-block;
+    height: 24px;
+    mask-position: 50%;
+    mask-repeat: no-repeat;
+    width: 24px;
+
+    &.file-alt {mask-image: url("../icons/file-alt.svg")}
+
+    &.file-archive {mask-image: url("../icons/file-archive.svg")}
+
+    &.file-audio {mask-image: url("../icons/file-audio.svg")}
+
+    &.file-cell {mask-image: url("../icons/file-spreadsheet.svg")}
+
+    &.file-code {mask-image: url("../icons/file-code.svg")}
+
+    &.file-image {mask-image: url("../icons/file-image.svg")}
+
+    &.file-pdf {mask-image: url("../icons/file-pdf.svg")}
+
+    &.file-regular {mask-image: url("../icons/file.svg")}
+
+    &.file-video {mask-image: url("../icons/file-video.svg")}
+
+    &.file-word {mask-image: url("../icons/file-word.svg")}
+
+    &.folder-icon {mask-image: url("../icons/folder.svg")}
+
+    &.list-view-icon {mask-image: url("../icons/list-view.svg")}
+
+    &.refresh-icon {mask-image: url("../icons/refresh.svg")}
+
+    &.select-all-icon {mask-image: url("../icons/select-all.svg")}
+
+    &.side-by-side-view-icon {mask-image: url("../icons/two-panel.svg")}
+
+    &.tree-view-icon {mask-image: url("../icons/tree-view.svg")}
+
+    &.unselect-all-icon {mask-image: url("../icons/unselect-all.svg")}
+  }
+}
