@@ -15,6 +15,7 @@
     margin: 0;
     padding: 0;
   }
+
   ol, ul {list-style: none}
 
   button {
@@ -58,17 +59,7 @@
       justify-content: center;
       width: 30px;
 
-      &.active {
-        background-color: #ffffff;
-      }
-    }
-  }
-
-  [data-type] {
-    display: none;
-
-    &.active {
-      display: block;
+      &.active {background-color: #ffffff}
     }
   }
 
@@ -98,7 +89,7 @@
         li {
           cursor: pointer;
           margin-bottom: -1px;
-          padding: 8px 8px 4px 8px;
+          padding: 8px 10px 4px 10px;
 
           &.active {
             background-color: white;
@@ -125,6 +116,10 @@
         }
       }
     }
+
+    .file-browser-tree-list {width: calc(30% - 2px)}
+
+    .file-browser-tree-content {width: calc(70% - 2px)}
   }
 
   .file-browser-controls-wrap {
@@ -142,10 +137,7 @@
   }
 
   .file-browser-list-wrap {
-    thead th {
-      padding: 10px;
-      user-select: none;
-    }
+    thead th {padding: 10px; user-select: none}
 
     td {
       cursor: default;
@@ -177,11 +169,15 @@
 
     &.file-code {mask-image: url("../icons/file-code.svg")}
 
+    &.file-database {mask-image: url("../icons/database.svg")}
+
     &.file-image {mask-image: url("../icons/file-image.svg")}
 
     &.file-pdf {mask-image: url("../icons/file-pdf.svg")}
 
     &.file-regular {mask-image: url("../icons/file.svg")}
+
+    &.file-text {mask-image: url("../icons/text.svg")}
 
     &.file-video {mask-image: url("../icons/file-video.svg")}
 

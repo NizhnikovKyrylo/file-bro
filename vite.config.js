@@ -14,7 +14,7 @@ export default defineConfig({
   },
   plugins: [
     laravel({
-      input: ['resources/css/file-browser.scss'],
+      input: ['resources/css/file-browser.scss', 'resources/js/file-browser.js', 'resources/js/app.js'],
       refresh: true,
     }),
   ],
