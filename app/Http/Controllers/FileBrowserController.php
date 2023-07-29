@@ -104,7 +104,7 @@ class FileBrowserController extends Controller
         }
 
         // Folder content
-        $result = [];
+        $result = collect();
 
         // Get folder file list
         $list = new \DirectoryIterator($this->cap($path));
@@ -113,11 +113,11 @@ class FileBrowserController extends Controller
         foreach ($list as $entity) {
             // Check instance is file or folder
             if (!$entity->isDot() && ($entity->isFile() || $entity->isDir())) {
-                $result[] = $this->instanceInfo($entity);
+                $result->push($this->instanceInfo($entity));
             }
         }
 
-        return response()->json($result);
+        return response()->json(array_values($result->sortByDesc(['isDir', 'name'])->toArray()));
     }
 
     /**

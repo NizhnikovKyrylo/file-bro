@@ -1,0 +1,42 @@
+- Side-by-side
+  - ~~click panel to select row~~
+  - ~~press "tab"~~
+  - ~~move "up" button~~
+  - ~~move "down" button~~
+  - ~~insert with space~~
+  - insert
+  - get file properties via alt+enter
+  - go into folder
+    - mouse
+    - press "right button"
+  - go upper folder
+    - mouse
+    - press "left" button
+  - Change file order
+    - name
+    - ext
+    - size
+    - date
+  - bottom panel
+    - rename
+    - view file
+    - upload copy
+    - copy
+    - move
+    - create folder
+    - remove
+  - context menu
+    - open
+    - edit
+    - ========
+    - move
+    - copy
+    - delete
+    - rename
+    - ========
+    - cut
+    - copy
+    - paste
+    - ========
+    - show file properties
+  - bookmarks

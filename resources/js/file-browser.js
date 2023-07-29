@@ -6,6 +6,11 @@ export class FileBrowser {
   options = {
     defaultView: 'sideBySide',
     panel: [['refresh'], ['treeView', 'listView', 'sideBySide'], ['selectAll', 'unselectAll']],
+    sideBySide: {
+      active: 0,
+      leftPos: 0,
+      rightPos: 0
+    },
     routes: {
       copy: {method: 'post', url: '/file-browser/copy'},
       create: {method: 'post', url: '/file-browser/create'},
@@ -17,7 +22,7 @@ export class FileBrowser {
       size: {method: 'post', url: '/file-browser/size'},
       upload: {method: 'post', url: '/file-browser/upload'}
     }
-  }
+  };
 
   mimeTypes = {
     // archive
@@ -25,7 +30,14 @@ export class FileBrowser {
     // audio
     'file-audio': ['audio/aac', 'audio/ogg', 'audio/flac', 'audio/midi', 'audio/mpeg', 'audio/x-wav', 'audio/aifc', 'audio/x-aiff'],
     // database
-    'file-database': ['text/csv', 'application/csv', 'application/vnd.sun.xml.base', 'application/vnd.oasis.opendocument.base', 'application/vnd.oasis.opendocument.database', 'application/sql'],
+    'file-database': [
+      'text/csv',
+      'application/csv',
+      'application/vnd.sun.xml.base',
+      'application/vnd.oasis.opendocument.base',
+      'application/vnd.oasis.opendocument.database',
+      'application/sql'
+    ],
     //font
     'file-text': ['font/ttf', 'font/woff', 'font/woff2', 'font/opentype', 'application/vnd.ms-fontobject'],
     //images
@@ -33,16 +45,53 @@ export class FileBrowser {
     // pdf
     'file-pdf': ['application/pdf'],
     // scripts
-    'file-code': ['application/ecmascript', 'application/hta', 'application/xhtml+xml', 'application/xml', 'application/xslt+xml', 'text/css', 'text/x-csrc', 'text/x-c++src', 'application/x-asp', 'text/x-python'],
+    'file-code': [
+      'application/ecmascript',
+      'application/hta',
+      'application/xhtml+xml',
+      'application/xml',
+      'application/xslt+xml',
+      'text/css',
+      'text/x-csrc',
+      'text/x-c++src',
+      'application/x-asp',
+      'text/x-python'
+    ],
     // spreadsheet
-    'file-cell': ['application/vnd.ms-excel', 'application/vnd.ms-excel.sheet.macroEnabled.12', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.oasis.opendocument.spreadsheet'],
+    'file-cell': [
+      'application/vnd.ms-excel',
+      'application/vnd.ms-excel.sheet.macroEnabled.12',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.oasis.opendocument.spreadsheet'
+    ],
     // text
     'file-alt': ['text/plain', 'text/html', 'text/markdown', 'application/json', 'application/x-x509-ca-cert'],
     // text processor
-    'file-word': ['application/msword', 'application/rtf', 'text/rtf', 'text/richtext', 'application/vnd.ms-word.document.macroEnabled.12', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.oasis.opendocument.text', 'application/vnd.oasis.opendocument.text-master', 'application/abiword'],
+    'file-word': [
+      'application/msword',
+      'application/rtf',
+      'text/rtf',
+      'text/richtext',
+      'application/vnd.ms-word.document.macroEnabled.12',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.oasis.opendocument.text',
+      'application/vnd.oasis.opendocument.text-master',
+      'application/abiword'
+    ],
     // video
-    'file-video': ['video/avi', 'video/mpeg', 'video/mp4', 'video/quicktime', 'video/ogg', 'video/webm', 'video/x-flv', 'video/x-msvideo', 'video/x-matroska', 'video/x-ms-wmv']
-  }
+    'file-video': [
+      'video/avi',
+      'video/mpeg',
+      'video/mp4',
+      'video/quicktime',
+      'video/ogg',
+      'video/webm',
+      'video/x-flv',
+      'video/x-msvideo',
+      'video/x-matroska',
+      'video/x-ms-wmv'
+    ]
+  };
 
   /**
    * @param wrap - file-browser wrapper
@@ -51,48 +100,70 @@ export class FileBrowser {
   constructor(wrap, options = {}) {
     // Set panel view
     if (options.hasOwnProperty('panel')) {
-      this.options.panel = options.panel
+      this.options.panel = options.panel;
     }
     // Set routes
     if (options.hasOwnProperty('routes')) {
-      this.options.routes = Object.assign(this.options.routes, options.routes)
+      this.options.routes = Object.assign(this.options.routes, options.routes);
     }
-
-    const getFileList = this.request(Object.assign(this.options.routes.list, {data: {path: '/'}}))
+    // Retrieve a list of files
+    const getFileList = this.request(Object.assign(this.options.routes.list, {data: {path: '/'}}));
     getFileList.then(response => {
       if (200 === response.status) {
-        document.querySelector(wrap).innerHTML = '<div class="file-browser-wrap">' +
-          this.buildControlPanel() +
-          this.buildBody(response.data) +
-          '</div>'
+        document.querySelector(wrap).innerHTML = '<div class="file-browser-wrap">' + this.buildControlPanel() + this.buildBody(response.data) + '</div>';
+
+        this.initSideBySideListeners(wrap);
       }
-    })
+    });
+  }
+
+  initSideBySideListeners(wrap) {
+    for (let type in this.sideBySideEvents) {
+      for (let event in this.sideBySideEvents[type]) {
+        for (let i = 0, n = this.sideBySideEvents[type][event].length; i < n; i++) {
+          const handler = this.sideBySideEvents[type][event][i];
+          handler.hasOwnProperty('target') && document.querySelector(`${wrap} ${handler.target}`).addEventListener(event, handler.callback)
+        }
+      }
+    }
+
+    document.addEventListener('keyup', e => {
+      const key = e.key.toLowerCase();
+      console.log(key);
+      // Tab
+      for (let i = 0, n = this.sideBySideEvents.panel.keyup.length; i < n; i++) {
+        const event = this.sideBySideEvents.panel.keyup[i]
+        if (!Array.isArray(event.key)) {
+          event.key = [event.key];
+        }
+
+        if (event.key.includes(key)) {
+          event.callback(wrap, e);
+        }
+      }
+    });
   }
 
   async request(options) {
     if (!options.hasOwnProperty('url')) {
-      throw new ReferenceError('The request requires url endpoint.')
+      throw new ReferenceError('The request requires url endpoint.');
     }
 
     const input = {
       headers: Object.assign({"Content-Type": "application/json"}, options.headers ?? {}),
       method: 'method' in options ? options.method.toUpperCase() : 'GET',
-      data: 'data' in options ? JSON.stringify(options.data) : null,
-    }
+      data: 'data' in options ? JSON.stringify(options.data) : null
+    };
 
     return new Promise((resolve, reject) => {
       fetch(options.url, input)
         .then(response => response.json().then(body => resolve({status: response.status, data: body})))
-        .catch(response => reject(response))
-    })
+        .catch(response => reject(response));
+    });
   }
 
   buildBody(files) {
-    return this.templates.views[this.options.defaultView].wrap(
-      'sideBySide' !== this.options.defaultView
-        ? files
-        : {left: files, right: files}
-    )
+    return this.templates.views[this.options.defaultView].wrap('sideBySide' !== this.options.defaultView ? files : {left: files, right: files});
   }
 
   /**
@@ -101,37 +172,36 @@ export class FileBrowser {
    * @returns {string}
    */
   buildControlPanel(panelWrap = '') {
-    for (let i = 0, n = this.options.panel.length; i < n; i++) {
-      panelWrap += this.options.panel[i].reduce((sum, curr) => sum + `<li>${this.templates.buttons[curr](curr === this.options.defaultView)}</li>`, '')
-
-      if (i !== (this.options.panel.length - 1)) {
-        panelWrap += '<li class="separator-tile"></li>'
-      }
-    }
+    panelWrap = this.options.panel.map(
+      items => items.map(curr => `<li>${this.templates.buttons[curr](curr === this.options.defaultView)}</li>`).join('')
+    ).join('<li class="separator-tile"></li>');
 
     return '<div class="file-browser-actions-wrap"><ul>' + panelWrap + '</ul></div>';
   }
 
   /**
    * Format bytes as human-readable text.
-   *
    * @param {int} bytes
    * @returns {string}
    */
   fileSize(bytes) {
-    if (Math.abs(bytes) < 1024) {
-      return bytes;
+    const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+    const value = Math.floor(Math.log(Math.abs(bytes)) / Math.log(1024));
+    return (bytes / Math.pow(1024, value)).toFixed(1) + ' ' + units[value];
+  }
+
+  /**
+   * Get file icon by file properties
+   * @param file
+   * @returns {string}
+   */
+  fileIcon(file) {
+    if (file.isDir) {
+      return 'folder-icon';
+    } else {
+      const icon = Object.keys(this.mimeTypes).find(icon => this.mimeTypes[icon].includes(file['mime-type']));
+      return icon ? icon : 'file-regular';
     }
-
-    const units = ['K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'];
-    let u = -1;
-
-    do {
-      bytes /= 1024;
-      ++u;
-    } while (Math.round(Math.abs(bytes) * 10) / 10 >= 1024 && u < units.length - 1);
-
-    return bytes.toFixed(1) + ' ' + units[u];
   }
 
   /**
@@ -142,22 +212,122 @@ export class FileBrowser {
    */
   formatDate(timestamp) {
     const date = new Date(timestamp * 1000);
-    return `${date.getDate()}.${date.toLocaleString('default', {month: 'short'})}.${date.getFullYear()}` +
-      ` ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`
+    return `${date.getDate()}.${date.toLocaleString('default', {month: 'short'})}.${date.getFullYear()}` + ` ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
   }
 
-  fileIcon(file) {
-    let icon = 'file-regular';
-    if (file.isDir) {
-      icon = 'folder-icon'
-    } else {
-      for (let icon in this.mimeTypes) {
+  sideBySideFunctions = {
+    /**
+     * Remove "select" class
+     * @param panels
+     * @returns {*}
+     */
+    clearSelected: panels => panels.forEach(panel => [...panel.querySelectorAll('tbody tr')].forEach(node => node.classList.remove('select'))),
+    /**
+     * Set "select" class to row
+     * @param wrap
+     */
+    setSelected: wrap => {
+      // Get panel element
+      const panel = document.querySelectorAll(`${wrap} .file-browser-panel-wrap`)[this.options.sideBySide.active];
+      // Add "select" class to row
+      panel.querySelectorAll('tbody tr')[this.options.sideBySide[this.sideBySideFunctions.getSidePosition()]].classList.add('select')
+    },
+    /**
+     * Get side position field depends on active side (left is 0; right is 1)
+     * @returns {string}
+     */
+    getSidePosition: () => this.options.sideBySide.active ? 'rightPos' : 'leftPos'
+  }
 
-      }
+
+  sideBySideEvents = {
+    bookmarks: {},
+    controls: {},
+    header: {},
+    panel: {
+      keyup: [
+        // Insert with "Space" button
+        {
+          key: ' ',
+          callback: (wrap, e) => {
+            const panel = document.querySelectorAll(`${wrap} .file-browser-panel-wrap`)[this.options.sideBySide.active]
+            const row = panel.querySelectorAll('tbody tr')[this.options.sideBySide[this.sideBySideFunctions.getSidePosition()]]
+            if (row.classList.contains('insert')) {
+              row.classList.remove('insert')
+            } else {
+              row.classList.add('insert')
+            }
+          }
+        },
+        // Move up
+        {
+          key: 'arrowup',
+          callback: (wrap, e) => {
+            // Clear selected row
+            this.sideBySideFunctions.clearSelected(document.querySelectorAll(`${wrap} .file-browser-panel-wrap`))
+            // Check if selected row is not the first row
+            if (this.options.sideBySide[this.sideBySideFunctions.getSidePosition()] > 0) {
+              // Decrease row position
+              this.options.sideBySide[this.sideBySideFunctions.getSidePosition()]--
+            }
+            this.sideBySideFunctions.setSelected(wrap)
+          }
+        },
+        // Move down
+        {
+          key: 'arrowdown',
+          callback: (wrap, e) => {
+            // Clear selected row
+            this.sideBySideFunctions.clearSelected(document.querySelectorAll(`${wrap} .file-browser-panel-wrap`))
+            // Get current panel
+            const panel = document.querySelectorAll(`${wrap} .file-browser-panel-wrap`)[this.options.sideBySide.active];
+            // Check if selected row is not the last row
+            if (this.options.sideBySide[this.sideBySideFunctions.getSidePosition()] < panel.querySelectorAll('tbody tr').length - 1) {
+              // Increasse position
+              this.options.sideBySide[this.sideBySideFunctions.getSidePosition()]++;
+            }
+            panel.querySelectorAll('tbody tr')[this.options.sideBySide[this.sideBySideFunctions.getSidePosition()]].classList.add('select')
+          }
+        },
+        // Switch panel
+        {
+          key: 'tab',
+          callback: (wrap, e) => {
+            // Clear selected row
+            this.sideBySideFunctions.clearSelected(document.querySelectorAll(`${wrap} .file-browser-panel-wrap`))
+            // Invert active panel
+            this.options.sideBySide.active = +!this.options.sideBySide.active;
+            this.sideBySideFunctions.setSelected(wrap)
+          }
+        }
+      ],
+      click: [
+        {
+          target: '.file-browser-wrap .file-browser-panels-wrap',
+          callback: e => {
+            if (null !== e.target.closest('tbody')) {
+              // Selected row
+              const row = e.target.closest('tr')
+              // Selected panel
+              const panel = e.target.closest('.file-browser-panel-wrap');
+              // Get panels list
+              const panels = Array.from(panel.closest('.file-browser-panels-wrap').querySelectorAll('.file-browser-panel-wrap'));
+              // Set the found index as active panel
+              this.options.sideBySide.active = panels.indexOf(panel);
+              // Find out active row
+              const rows = Array.from(row.closest('tbody').querySelectorAll('tr'));
+              // Set the found index as active row
+              this.options.sideBySide[this.sideBySideFunctions.getSidePosition()] = rows.indexOf(row);
+              // Clear selected rows
+              this.sideBySideFunctions.clearSelected(panels)
+              // Set class to row
+              row.classList.add('select')
+            }
+          }
+        }
+      ]
     }
-
-    return icon;
-  }
+  };
 
   /**
    *
@@ -176,184 +346,71 @@ export class FileBrowser {
     },
     views: {
       sideBySide: {
+        // Side-by-side panel bookmarks
         bookmark: {
           item: (name, isActive = !1) => `<li${isActive ? ' class="active"' : ''}>${name}</li>`,
-          wrap: items => {
-            items = items.reduce((sum, cur) => sum + this.templates.views.sideBySide.bookmark.item(cur.name, cur.active), '');
-            return `<div class="file-browser-bookmark-wrap"><ul>${items}</ul></div>`
+          wrap: items => `<div class="file-browser-bookmark-wrap"><ul>${items.reduce((sum, cur) => sum + this.templates.views.sideBySide.bookmark.item(cur.name, cur.active), '')}</ul></div>`
+        },
+        // Side-by-side file list item
+        listItem: (file, position, isLeft) => {
+          const activePanel = this.options.sideBySide.active ? 'right' : 'left';
+          const className = isLeft && !this.options.sideBySide.active && position === this.options.sideBySide[activePanel] ? 'class="select"' : ''
+
+          return `<tr ${className} title="${file.basename}\n Modification date/time: ${this.formatDate(file.mtime)}\n Size: ${file.isDir ? 0 : this.fileSize(file.size)}">
+          <td><i class="file-browser-icon ${this.fileIcon(file)}"></i></td>
+          <td><span>${file.filename}</span></td>
+          <td><span>${file.ext}</span></td>
+          <td><span>${file.isDir ? '&lt;DIR&gt;' : this.fileSize(file.size)}</span></td>
+          <td><span>${this.formatDate(file.mtime)}</span></td>
+        </tr>`
+        },
+        // Side-by-sile file list header
+        panel: (bookmark, files, isLeft) => {
+          let counters = {folders: 0, files: 0};
+          for (let i = 0, n = files.length; i < n; i++) {
+            counters[files[i].isDir ? 'folders' : 'files']++;
           }
-        },
-        listItem: file => {
-          console.log(
-            this.fileIcon(file),
-            file.filename,
-            file.ext,
-            file.isDir ? '&lt;DIR&gt;' : this.fileSize(file.size),
-            this.formatDate(file.mtime)
-          )
-        },
-        panel: (bookmark, files) => {
-          files.reduce((sum, cur) => this.templates.views.sideBySide.listItem(cur))
+
           return `<div class="file-browser-panel-wrap">
-          ${this.templates.views.sideBySide.bookmark.wrap(bookmark)}
-          <table class="file-browser-panel-content">
-            <thead>
-            <tr>
-              <th><span>Name</span></th>
-              <th><span>Ext</span></th>
-              <th><span>Size</span></th>
-              <th><span>Date</span></th>
-            </tr>
-            </thead>
-            <tbody>
-            </tbody>
-          </table>
-        </div>`
-        },
-        wrap: (files, bookmarks = {left: [{name: '/', active: !0}], right: [{name: '/', active: !0}]}) => {
-          console.log(files.left)
-          return `<div data-type="side-by-side">
-            <div class="file-browser-panels-wrap">
-              ${this.templates.views.sideBySide.panel(bookmarks.left, files.left)}
-              ${this.templates.views.sideBySide.panel(bookmarks.right, files.right)}
-            </div>
+            ${this.templates.views.sideBySide.bookmark.wrap(bookmark)}
+            <table class="file-browser-panel-content">
+              <thead>
+              <tr>
+                <th colspan="2"><span>Name</span></th>
+                <th><span>Ext</span></th>
+                <th><span>Size</span></th>
+                <th><span>Date</span></th>
+              </tr>
+              </thead>
+              <tbody>${files.reduce((sum, cur, i) => sum + this.templates.views.sideBySide.listItem(cur, i, isLeft), '')}</tbody>
+              <tfoot>
+              <tr>
+                <th colSpan="5">files: ${counters.files}&nbsp;&nbsp;&nbsp;folders: ${counters.folders}</th>
+              </tr>
+              </tfoot>
+            </table>
           </div>`;
-        }
+        },
+        // Side-by-side wrapper
+        wrap: (files, bookmarks = {left: [{name: '/', active: !0}], right: [{name: '/', active: !0}]}) =>
+          `<div data-type="side-by-side">
+          <div class="file-browser-panels-wrap">
+            ${this.templates.views.sideBySide.panel(bookmarks.left, files.left, !0)}
+            ${this.templates.views.sideBySide.panel(bookmarks.right, files.right, !1)}
+          </div>
+          <div class="file-browser-controls-wrap">
+            <button tabindex="-1" name="rename" type="button"><span>Rename</span></button>
+            <button tabindex="-1" name="view" type="button"><span>View</span></button>
+            <button tabindex="-1" name="upload" type="button"><span>Upload</span></button>
+            <button tabindex="-1" name="copy" type="button"><span>Copy</span></button>
+            <button tabindex="-1" name="move" type="button"><span>Move</span></button>
+            <button tabindex="-1" name="createDir" type="button"><span>Directory</span></button>
+            <button tabindex="-1" name="delete" type="button"><span>Delete</span></button>
+          </div>
+        </div>`
       }
     },
-    sideBySide: {
-      view: `<div data-type="side-by-side">
-              <div class="file-browser-panels-wrap">
-                <div class="file-browser-panel-wrap">
-                  <div class="file-browser-bookmark-wrap">
-                    <ul>
-                      <li class="active">
-                        <span>files</span>
-                      </li>
-                    </ul>
-                  </div>
-                  <table class="file-browser-panel-content">
-                    <thead>
-                    <tr>
-                      <th>
-                        <span>Name</span>
-                      </th>
-                      <th>
-                        <span>Ext</span>
-                      </th>
-                      <th>
-                        <span>Size</span>
-                      </th>
-                      <th>
-                        <span>Date</span>
-                      </th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr>
-                      <td>
-                        <span>[..]</span>
-                      </td>
-                      <td></td>
-                      <td><span></span></td>
-                      <td><span>29.aug.2022</span></td>
-                    </tr>
-                    <tr>
-                      <td><span>test</span></td>
-                      <td><span>file</span></td>
-                      <td><span>1.7 M</span></td>
-                      <td><span>29.aug.2022</span></td>
-                    </tr>
-                    </tbody>
 
-                    <tfoot>
-                    <tr>
-                      <th colSpan="4">
-                        files: <span data-counter="files">1</span>&nbsp;&nbsp;&nbsp;folders: <span data-counter="folders">0</span>
-                      </th>
-                    </tr>
-                    </tfoot>
-                  </table>
-                </div>
-
-                <div class="file-browser-panel-wrap">
-                  <div class="file-browser-bookmark-wrap">
-                    <ul>
-                      <li class="active">
-                        <span>files</span>
-                      </li>
-                    </ul>
-                  </div>
-                  <table class="file-browser-panel-content">
-                    <thead>
-                    <tr>
-                      <th>
-                        <span>Name</span>
-                      </th>
-                      <th>
-                        <span>Ext</span>
-                      </th>
-                      <th>
-                        <span>Size</span>
-                      </th>
-                      <th>
-                        <span>Date</span>
-                      </th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr>
-                      <td>
-                        <span>[..]</span>
-                      </td>
-                      <td></td>
-                      <td><span>&lt;DIR&gt;</span></td>
-                      <td><span>29.aug.2022</span></td>
-                    </tr>
-                    <tr>
-                      <td><span>test</span></td>
-                      <td><span>file</span></td>
-                      <td><span>1.7 M</span></td>
-                      <td><span>29.aug.2022</span></td>
-                    </tr>
-                    </tbody>
-
-                    <tfoot>
-                    <tr>
-                      <th colSpan="4">
-                        files: <span data-counter="files">1</span>&nbsp;&nbsp;&nbsp;folders: <span data-counter="folders">0</span>
-                      </th>
-                    </tr>
-                    </tfoot>
-                  </table>
-                </div>
-              </div>
-
-              <div class="file-browser-controls-wrap">
-                <button name="rename" type="button">
-                  <span>Rename</span>
-                </button>
-                <button name="view" type="button">
-                  <span>View</span>
-                </button>
-                <button name="upload" type="button">
-                  <span>Upload</span>
-                </button>
-                <button name="copy" type="button">
-                  <span>Copy</span>
-                </button>
-                <button name="move" type="button">
-                  <span>Move</span>
-                </button>
-                <button name="createDir" type="button">
-                  <span>Directory</span>
-                </button>
-                <button name="delete" type="button">
-                  <span>Delete</span>
-                </button>
-              </div>
-            </div>`
-    },
     tree: {
       view: `<div class="active" data-type="tree-view">
               <div class="file-browser-panels-wrap">
@@ -470,5 +527,5 @@ export class FileBrowser {
               </table>
             </div>`
     }
-  }
+  };
 }

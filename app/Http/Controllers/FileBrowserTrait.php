@@ -74,13 +74,16 @@ trait FileBrowserTrait
             $file = new \SplFileInfo($file);
         }
 
+        $filename = $file->isFile()
+            ? substr($file->getBaseName(), 0, strlen($file->getBaseName()) - strlen($file->getExtension()) - 1)
+            : $file->getFileName();
+
         return [
             'path' => substr($this->cap($file->getPath()), strlen(config('file-browser.entry'))),
             'isDir' => $file->isDir(),
             'basename' => $file->getFileName(),
-            'filename' => $file->isFile()
-                ? substr($file->getBaseName(), 0, strlen($file->getBaseName()) - strlen($file->getExtension()) - 1)
-                : $file->getFileName(),
+            'filename' => $filename,
+            'name' => mb_strtolower($filename),
             'ext' => $file->getExtension(),
             'mime-type' => $file->isFile() ? mime_content_type($file->getPathname()) : null,
             'size' => $file->getSize(),

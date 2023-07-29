@@ -1,6 +1,6 @@
 .file-browser-wrap {
   background-color: #ebebeb;
-  border: 1px solid #bbbbbb;
+  border: 1px solid #bbb;
   box-sizing: border-box;
   margin: 0;
   padding: 5px;
@@ -31,13 +31,13 @@
   }
 
   .file-browser-actions-wrap {
-    border-bottom: 1px solid #cccccc;
-    border-top: 1px solid #cccccc;
+    border-bottom: 1px solid #ccc;
+    border-top: 1px solid #ccc;
 
     ul {
       align-items: center;
-      border-left: 1px solid #cccccc;
-      border-right: 1px solid #cccccc;
+      border-left: 1px solid #ccc;
+      border-right: 1px solid #ccc;
       display: flex;
       justify-content: flex-start;
     }
@@ -47,8 +47,8 @@
 
       &.separator-tile {
         height: 30px;
-        border-left: 1px solid #bbbbbb;
-        border-right: 1px solid #cccccc;
+        border-left: 1px solid #bbb;
+        border-right: 1px solid #ccc;
       }
     }
 
@@ -59,7 +59,7 @@
       justify-content: center;
       width: 30px;
 
-      &.active {background-color: #ffffff}
+      &.active {background-color: #fff}
     }
   }
 
@@ -103,18 +103,33 @@
     }
 
     .file-browser-panel-content {
-      th, td {padding: 8px 8px 4px 8px; cursor: default}
+      th, td {border: none; cursor: default; padding: 8px 8px 4px 8px}
 
-      thead {
-        tr {border-bottom: 1px solid #cccccc}
+      th {text-align: left; user-select: none}
 
-        th {
-          border-left: 1px solid #cccccc;
-          user-select: none;
+      thead tr {border-bottom: 1px solid #ccc}
 
-          &:first-child {border-left-color: #000}
+      tbody {
+        tr.select {background-color: #8499e7}
+
+        tr.insert td {color: #f22}
+
+        td {
+          vertical-align: middle;
+
+          > span {
+            font-size: 12px;
+            display: inline-block;
+            line-height: 30px;
+            max-height: 30px;
+            overflow-y: hidden;
+          }
+
+          &:first-child {text-align: center}
         }
       }
+
+      tfoot {font-size: 14px}
     }
 
     .file-browser-tree-list {width: calc(30% - 2px)}
@@ -145,6 +160,7 @@
       vertical-align: middle;
 
       &:first-child {width: 30px}
+
       &:nth-child(3), &:last-child {width: 150px}
 
       span {white-space: nowrap}
@@ -154,10 +170,10 @@
   .file-browser-icon {
     background-color: #000;
     display: inline-block;
-    height: 24px;
+    height: 20px;
     mask-position: 50%;
     mask-repeat: no-repeat;
-    width: 24px;
+    width: 20px;
 
     &.file-alt {mask-image: url("../icons/file-alt.svg")}
 
