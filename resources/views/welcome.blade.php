@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  @vite(['resources/css/file-browser.scss', 'resources/js/file-browser.js'])
+  @vite(['resources/css/file-browser.scss'])
   <title>Laravel</title>
 
 </head>
@@ -13,7 +13,7 @@
 <div id="wrapper">
   <div class="inner" style="margin-top: 80px">
     <section>
-      <div class="init"></div>
+      <div id="file-browser"></div>
     </section>
   </div>
 </div>

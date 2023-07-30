@@ -251,9 +251,7 @@ class FileBrowserController extends Controller
             ], 404);
         }
 
-        return response()->json([
-            'size' => is_dir($path) ? $this->recursiveSize($path) : filesize($path)
-        ]);
+        return response()->json(is_dir($path) ? $this->recursiveSize($path) : ['size' => filesize($path)]);
     }
 
     /**

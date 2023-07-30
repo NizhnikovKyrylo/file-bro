@@ -1,18 +1,18 @@
 - Side-by-side
   - ~~click panel to select row~~
-  - ~~press "tab"~~
-  - ~~move "up" button~~
-  - ~~move "down" button~~
-  - ~~insert with space~~
+  - press "tab"
+  - move "up" button
+  - move "down" button
+  - insert with space
   - insert
   - get file properties via alt+enter
   - go into folder
-    - mouse
-    - press "right button"
+    - enter
+    - mouse double-click // dblclick
   - go upper folder
     - mouse
     - press "left" button
-  - Change file order
+  - Sort/Change file order
     - name
     - ext
     - size

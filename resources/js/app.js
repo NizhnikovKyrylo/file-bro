@@ -1,3 +1,3 @@
-import {FileBrowser} from "./file-browser.js";
-
-new FileBrowser('.init')
+import { createApp } from 'vue'
+import App from "./App.vue"
+createApp(App).mount("#file-browser")

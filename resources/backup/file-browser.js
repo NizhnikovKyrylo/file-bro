@@ -6,11 +6,6 @@ export class FileBrowser {
   options = {
     defaultView: 'sideBySide',
     panel: [['refresh'], ['treeView', 'listView', 'sideBySide'], ['selectAll', 'unselectAll']],
-    sideBySide: {
-      active: 0,
-      leftPos: 0,
-      rightPos: 0
-    },
     routes: {
       copy: {method: 'post', url: '/file-browser/copy'},
       create: {method: 'post', url: '/file-browser/create'},
@@ -23,6 +18,18 @@ export class FileBrowser {
       upload: {method: 'post', url: '/file-browser/upload'}
     }
   };
+  
+  protected = {
+    files: {
+      left: [],
+      right: []
+    },
+    sideBySide: {
+      active: 0,
+      left: 0,
+      right: 0
+    }
+  }
 
   mimeTypes = {
     // archive
@@ -129,7 +136,6 @@ export class FileBrowser {
 
     document.addEventListener('keyup', e => {
       const key = e.key.toLowerCase();
-      console.log(key);
       // Tab
       for (let i = 0, n = this.sideBySideEvents.panel.keyup.length; i < n; i++) {
         const event = this.sideBySideEvents.panel.keyup[i]
@@ -152,7 +158,7 @@ export class FileBrowser {
     const input = {
       headers: Object.assign({"Content-Type": "application/json"}, options.headers ?? {}),
       method: 'method' in options ? options.method.toUpperCase() : 'GET',
-      data: 'data' in options ? JSON.stringify(options.data) : null
+      body: 'data' in options ? JSON.stringify(options.data) : null
     };
 
     return new Promise((resolve, reject) => {
@@ -163,7 +169,9 @@ export class FileBrowser {
   }
 
   buildBody(files) {
-    return this.templates.views[this.options.defaultView].wrap('sideBySide' !== this.options.defaultView ? files : {left: files, right: files});
+    this.protected.files.left = files;
+    this.protected.files.right = files;
+    return this.templates.views[this.options.defaultView].wrap();
   }
 
   /**
@@ -228,15 +236,52 @@ export class FileBrowser {
      */
     setSelected: wrap => {
       // Get panel element
-      const panel = document.querySelectorAll(`${wrap} .file-browser-panel-wrap`)[this.options.sideBySide.active];
+      const panel = document.querySelectorAll(`${wrap} .file-browser-panel-wrap`)[this.protected.sideBySide.active];
       // Add "select" class to row
-      panel.querySelectorAll('tbody tr')[this.options.sideBySide[this.sideBySideFunctions.getSidePosition()]].classList.add('select')
+      panel.querySelectorAll('tbody tr')[this.protected.sideBySide[this.sideBySideFunctions.getSidePosition()]].classList.add('select')
+    },
+    /**
+     * Get selected file data
+     * @returns {*}
+     */
+    getFile: () => {
+      const side = this.sideBySideFunctions.getSidePosition()
+      return this.protected.files[side][this.protected.sideBySide[side]]
     },
     /**
      * Get side position field depends on active side (left is 0; right is 1)
      * @returns {string}
      */
-    getSidePosition: () => this.options.sideBySide.active ? 'rightPos' : 'leftPos'
+    getSidePosition: () => this.protected.sideBySide.active ? 'right' : 'left',
+    /**
+     * Toggle "insert" class on a row
+     * @param wrap
+     * @returns {Element}
+     */
+    highlightRow: wrap => {
+      const panel = document.querySelectorAll(`${wrap} .file-browser-panel-wrap`)[this.protected.sideBySide.active]
+      const row = panel.querySelectorAll('tbody tr')[this.protected.sideBySide[this.sideBySideFunctions.getSidePosition()]]
+      if (row.classList.contains('insert')) {
+        row.classList.remove('insert')
+      } else {
+        row.classList.add('insert')
+      }
+
+      return panel
+    },
+    /**
+     * Move "selected" element down
+     * @param panel
+     */
+    moveDown: panel => {
+      let position = this.protected.sideBySide[this.sideBySideFunctions.getSidePosition()]
+      // Check if selected row is not the last row
+      if (position < panel.querySelectorAll('tbody tr').length - 1) {
+        // Increase position
+        this.protected.sideBySide[this.sideBySideFunctions.getSidePosition()] = ++position;
+      }
+      panel.querySelectorAll('tbody tr')[position].classList.add('select')
+    }
   }
 
 
@@ -246,17 +291,51 @@ export class FileBrowser {
     header: {},
     panel: {
       keyup: [
+        {
+          key: 'enter',
+          callback: (wrap, e) => {
+            if (!e.altKey) {
+              console.log('go inside');
+            }
+          }
+        },
+        {
+          key: 'enter',
+          callback: (wrap, e) => {
+            if (e.altKey) {
+              const file = this.sideBySideFunctions.getFile()
+
+              this.request(Object.assign(this.options.routes.info, {data: {path: file.path + file.basename}})).then(response => {
+                console.log(response);
+              })
+            }
+          }
+        },
+        // Insert with "Insert" button
+        {
+          key: 'insert',
+          callback: (wrap, e) => {
+            // Clear selected row
+            this.sideBySideFunctions.clearSelected(document.querySelectorAll(`${wrap} .file-browser-panel-wrap`))
+            // Highlight row and get active panel
+            const panel = this.sideBySideFunctions.highlightRow(wrap)
+            // Change "selected" and "active" position down
+            this.sideBySideFunctions.moveDown(panel)
+          }
+        },
         // Insert with "Space" button
         {
           key: ' ',
           callback: (wrap, e) => {
-            const panel = document.querySelectorAll(`${wrap} .file-browser-panel-wrap`)[this.options.sideBySide.active]
-            const row = panel.querySelectorAll('tbody tr')[this.options.sideBySide[this.sideBySideFunctions.getSidePosition()]]
-            if (row.classList.contains('insert')) {
-              row.classList.remove('insert')
-            } else {
-              row.classList.add('insert')
+            const file = this.sideBySideFunctions.getFile()
+            if (file.isDir) {
+              this.request(Object.assign(this.options.routes.size, {data: {path: file.path + file.basename}})).then(response => {
+                response.data.size = this.fileSize(response.data.size)
+                file.data = response.data;
+                console.log(this.protected.files.left);
+              })
             }
+            this.sideBySideFunctions.highlightRow(wrap)
           }
         },
         // Move up
@@ -266,9 +345,9 @@ export class FileBrowser {
             // Clear selected row
             this.sideBySideFunctions.clearSelected(document.querySelectorAll(`${wrap} .file-browser-panel-wrap`))
             // Check if selected row is not the first row
-            if (this.options.sideBySide[this.sideBySideFunctions.getSidePosition()] > 0) {
+            if (this.protected.sideBySide[this.sideBySideFunctions.getSidePosition()] > 0) {
               // Decrease row position
-              this.options.sideBySide[this.sideBySideFunctions.getSidePosition()]--
+              this.protected.sideBySide[this.sideBySideFunctions.getSidePosition()]--
             }
             this.sideBySideFunctions.setSelected(wrap)
           }
@@ -280,13 +359,8 @@ export class FileBrowser {
             // Clear selected row
             this.sideBySideFunctions.clearSelected(document.querySelectorAll(`${wrap} .file-browser-panel-wrap`))
             // Get current panel
-            const panel = document.querySelectorAll(`${wrap} .file-browser-panel-wrap`)[this.options.sideBySide.active];
-            // Check if selected row is not the last row
-            if (this.options.sideBySide[this.sideBySideFunctions.getSidePosition()] < panel.querySelectorAll('tbody tr').length - 1) {
-              // Increasse position
-              this.options.sideBySide[this.sideBySideFunctions.getSidePosition()]++;
-            }
-            panel.querySelectorAll('tbody tr')[this.options.sideBySide[this.sideBySideFunctions.getSidePosition()]].classList.add('select')
+            const panel = document.querySelectorAll(`${wrap} .file-browser-panel-wrap`)[this.protected.sideBySide.active];
+            this.sideBySideFunctions.moveDown(panel)
           }
         },
         // Switch panel
@@ -296,7 +370,7 @@ export class FileBrowser {
             // Clear selected row
             this.sideBySideFunctions.clearSelected(document.querySelectorAll(`${wrap} .file-browser-panel-wrap`))
             // Invert active panel
-            this.options.sideBySide.active = +!this.options.sideBySide.active;
+            this.protected.sideBySide.active = +!this.protected.sideBySide.active;
             this.sideBySideFunctions.setSelected(wrap)
           }
         }
@@ -313,11 +387,11 @@ export class FileBrowser {
               // Get panels list
               const panels = Array.from(panel.closest('.file-browser-panels-wrap').querySelectorAll('.file-browser-panel-wrap'));
               // Set the found index as active panel
-              this.options.sideBySide.active = panels.indexOf(panel);
+              this.protected.sideBySide.active = panels.indexOf(panel);
               // Find out active row
               const rows = Array.from(row.closest('tbody').querySelectorAll('tr'));
               // Set the found index as active row
-              this.options.sideBySide[this.sideBySideFunctions.getSidePosition()] = rows.indexOf(row);
+              this.protected.sideBySide[this.sideBySideFunctions.getSidePosition()] = rows.indexOf(row);
               // Clear selected rows
               this.sideBySideFunctions.clearSelected(panels)
               // Set class to row
@@ -353,8 +427,8 @@ export class FileBrowser {
         },
         // Side-by-side file list item
         listItem: (file, position, isLeft) => {
-          const activePanel = this.options.sideBySide.active ? 'right' : 'left';
-          const className = isLeft && !this.options.sideBySide.active && position === this.options.sideBySide[activePanel] ? 'class="select"' : ''
+          const activePanel = this.protected.sideBySide.active ? 'right' : 'left';
+          const className = isLeft && !this.protected.sideBySide.active && position === this.protected.sideBySide[activePanel] ? 'class="select"' : ''
 
           return `<tr ${className} title="${file.basename}\n Modification date/time: ${this.formatDate(file.mtime)}\n Size: ${file.isDir ? 0 : this.fileSize(file.size)}">
           <td><i class="file-browser-icon ${this.fileIcon(file)}"></i></td>
@@ -392,11 +466,11 @@ export class FileBrowser {
           </div>`;
         },
         // Side-by-side wrapper
-        wrap: (files, bookmarks = {left: [{name: '/', active: !0}], right: [{name: '/', active: !0}]}) =>
+        wrap: (bookmarks = {left: [{name: '/', active: !0}], right: [{name: '/', active: !0}]}) =>
           `<div data-type="side-by-side">
           <div class="file-browser-panels-wrap">
-            ${this.templates.views.sideBySide.panel(bookmarks.left, files.left, !0)}
-            ${this.templates.views.sideBySide.panel(bookmarks.right, files.right, !1)}
+            ${this.templates.views.sideBySide.panel(bookmarks.left, this.protected.files.left, !0)}
+            ${this.templates.views.sideBySide.panel(bookmarks.right, this.protected.files.right, !1)}
           </div>
           <div class="file-browser-controls-wrap">
             <button tabindex="-1" name="rename" type="button"><span>Rename</span></button>

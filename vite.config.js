@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import postcssNesting from 'postcss-nesting';
 import autoprefixer from 'autoprefixer';
 import laravel from 'laravel-vite-plugin';
+import vue from '@vitejs/plugin-vue'
 
 export default defineConfig({
   css: {
@@ -13,8 +14,9 @@ export default defineConfig({
     },
   },
   plugins: [
+    vue(),
     laravel({
-      input: ['resources/css/file-browser.scss', 'resources/js/file-browser.js', 'resources/js/app.js'],
+      input: ['resources/css/file-browser.scss', 'resources/js/app.js'],
       refresh: true,
     }),
   ],
