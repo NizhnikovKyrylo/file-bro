@@ -18,7 +18,7 @@
       </thead>
       <tbody>
       <template v-for="(file, i) in files">
-        <PanelRow :file="file" :index="i" :side="side"/>
+        <PanelRow :file="file" :index="i" :side="side" @selectRow="rowClick"/>
       </template>
       </tbody>
       <tfoot>
@@ -32,6 +32,8 @@
 
 <script>
 import PanelRow from "./PanelRow.vue";
+import {storage} from "../../storage.js";
+import {SideBySideOperations} from "../../mixin/side-by-side-operations.js";
 
 export default {
   components: {PanelRow},
@@ -61,6 +63,30 @@ export default {
     for (let i = 0, n = this.files.length; i < n; i++) {
       const type = this.files[i].isDir ? 'folders' : 'files';
       this.counters[type]++;
+    }
+    // Get file-browser options
+    let options = storage.get('side-by-side')
+    // Highlight start row
+    this.forceSelectItem(this.$el, options.active, options[options.active ? 'right' : 'left']);
+  },
+  mixins: [SideBySideOperations],
+  methods: {
+    // Row click event
+    rowClick(el) {
+      if (null !== el.closest('tbody')) {
+        // Get file-browser options
+        let options = storage.get('side-by-side')
+        // Clear "select" rows
+        this.clearSelected(el);
+        // Get panel side (0 - left; 1 - right) and row position
+        let [side, index] = this.getRowSideAndIndex(el)
+        // Save file browser options
+        options.active = side;
+        options[side ? 'right' : 'left'] = index;
+        storage.set('side-by-side', options)
+        // Highlight selected row
+        this.forceSelectItem(this.$el, side, index)
+      }
     }
   }
 };

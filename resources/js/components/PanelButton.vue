@@ -1,5 +1,5 @@
 <template>
-  <button :name="name" :class="{active: isActive}" type="button" :title="title">
+  <button :name="name" :class="{active: isActive}" tabindex="-1" type="button" :title="title">
     <i :class="`file-browser-icon ${icon}`"></i>
   </button>
 </template>

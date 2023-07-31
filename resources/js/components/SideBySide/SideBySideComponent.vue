@@ -19,6 +19,7 @@
 <script>
 import {storage} from "../../storage.js";
 import Panel from "./Panel.vue"
+import {SideBySideOperations} from "../../mixin/side-by-side-operations.js";
 
 export default {
   components: {Panel},
@@ -44,11 +45,35 @@ export default {
     this.bookmarks = storage.get('bookmarks');
     this.files = storage.get('files');
   },
+  mixins: [SideBySideOperations],
   mounted() {
+    const options = storage.get('side-by-side');
+
     document.addEventListener('keyup', e => {
       const key = e.key.toLowerCase();
+      // Press "tab" key
+      if ('tab' === key && !e.altKey && !e.ctrlKey && !e.shiftKey) {
+        // Switch the active panel
+        options.active = +!options.active;
+        // Move selection to another tab
+        this.moveSelection(this.$el, options.active, options[options.active ? 'right' : 'left'])
+      }
+      // Press arrow up
+      if ('arrowup' === key) {
+        const side = options.active;
+        options[side ? 'right' : 'left']--;
+        // Move selection up
+        options[side ? 'right' : 'left'] >= 0 && this.moveSelection(this.$el, side, options[side ? 'right' : 'left'])
+      }
+      // Press arrow down
+      if ('arrowdown' === key) {
+        const side = options.active;
+        const rowsCount = this.$el.querySelectorAll('.file-browser-panel-wrap')[side].querySelectorAll('tbody tr').length;
+        options[side ? 'right' : 'left']++;
+        options[side ? 'right' : 'left'] < rowsCount && this.moveSelection(this.$el, side, options[side ? 'right' : 'left'])
+      }
 
-      console.log(key);
+      storage.set('side-by-side', options)
     })
   }
 }
