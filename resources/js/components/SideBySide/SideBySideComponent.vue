@@ -1,8 +1,8 @@
 <template>
   <div data-type="side-by-side">
     <div class="file-browser-panels-wrap">
-      <Panel :files="files.left" :bookmarks="bookmarks.left" :side="0"/>
-      <Panel :files="files.right" :bookmarks="bookmarks.right" :side="1"/>
+      <Panel tabindex="0" :files="files.left" :bookmarks="bookmarks.left" :side="0"/>
+      <Panel tabindex="1" :files="files.right" :bookmarks="bookmarks.right" :side="1"/>
     </div>
     <div class="file-browser-controls-wrap">
       <button tabindex="-1" name="rename" type="button"><span>Rename</span></button>
@@ -47,33 +47,42 @@ export default {
   },
   mixins: [SideBySideOperations],
   mounted() {
-    const options = storage.get('side-by-side');
-
     document.addEventListener('keyup', e => {
       const key = e.key.toLowerCase();
       // Press "tab" key
       if ('tab' === key && !e.altKey && !e.ctrlKey && !e.shiftKey) {
+        const options = storage.get('side-by-side');
         // Switch the active panel
         options.active = +!options.active;
+        // Get next tab "tabindex" attribute
+        const panels = this.$el.querySelectorAll('.file-browser-panel-wrap')
+        // Set prev tab greater "tabindex" value
+        panels[+!options.active].setAttribute('tabindex', +panels[options.active].getAttribute('tabindex') + 1)
         // Move selection to another tab
         this.moveSelection(this.$el, options.active, options[options.active ? 'right' : 'left'])
+
+        storage.set('side-by-side', options)
       }
       // Press arrow up
       if ('arrowup' === key) {
+        const options = storage.get('side-by-side');
         const side = options.active;
         options[side ? 'right' : 'left']--;
         // Move selection up
         options[side ? 'right' : 'left'] >= 0 && this.moveSelection(this.$el, side, options[side ? 'right' : 'left'])
+
+        storage.set('side-by-side', options)
       }
       // Press arrow down
       if ('arrowdown' === key) {
+        const options = storage.get('side-by-side');
         const side = options.active;
         const rowsCount = this.$el.querySelectorAll('.file-browser-panel-wrap')[side].querySelectorAll('tbody tr').length;
         options[side ? 'right' : 'left']++;
         options[side ? 'right' : 'left'] < rowsCount && this.moveSelection(this.$el, side, options[side ? 'right' : 'left'])
-      }
 
-      storage.set('side-by-side', options)
+        storage.set('side-by-side', options)
+      }
     })
   }
 }
