@@ -7,26 +7,32 @@
         </li>
       </ul>
     </div>
-    <table class="file-browser-panel-content">
-      <thead>
-      <tr>
-        <th colspan="2"><span>Name</span></th>
-        <th><span>Ext</span></th>
-        <th><span>Size</span></th>
-        <th><span>Date</span></th>
-      </tr>
-      </thead>
-      <tbody>
-      <template v-for="(file, i) in files">
-        <PanelRow :file="file" :index="i" :side="side" @selectRow="rowClick"/>
-      </template>
-      </tbody>
-      <tfoot>
-      <tr>
-        <th colSpan="5">files: {{ counters.files }}&nbsp;&nbsp;&nbsp;folders: {{ counters.folders }}</th>
-      </tr>
-      </tfoot>
-    </table>
+    <div class="file-browser-panel-content">
+      <div class="file-browser-panel-content-header-wrap">
+        <div class="file-browser-panel-content-column">
+          <span>Name</span>
+        </div>
+        <div class="file-browser-panel-content-column">
+          <span>Ext</span>
+        </div>
+        <div class="file-browser-panel-content-column">
+          <span>Size</span>
+        </div>
+        <div class="file-browser-panel-content-column">
+          <span>Date</span>
+        </div>
+      </div>
+
+      <div class="file-browser-panel-content-body-wrap">
+        <template v-for="(file, i) in files">
+          <PanelRow :file="file" :index="i" :side="side" @selectRow="rowClick"/>
+        </template>
+      </div>
+
+      <div class="file-browser-panel-content-footer-wrap">
+        files: {{ counters.files }}&nbsp;&nbsp;&nbsp;folders: {{ counters.folders }}
+      </div>
+    </div>
   </div>
 </template>
 
@@ -73,7 +79,7 @@ export default {
   methods: {
     // Row click event
     rowClick(el) {
-      if (null !== el.closest('tbody')) {
+      if (null !== el.closest('.file-browser-panel-content-body-wrap')) {
         // Get file-browser options
         let options = storage.get('side-by-side')
         // Clear "select" rows

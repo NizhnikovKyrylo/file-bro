@@ -1,5 +1,5 @@
 <template>
-  <div data-type="side-by-side">
+  <div data-type="side-by-side" @keyup="keyEvent">
     <div class="file-browser-panels-wrap">
       <Panel tabindex="0" :files="files.left" :bookmarks="bookmarks.left" :side="0"/>
       <Panel tabindex="1" :files="files.right" :bookmarks="bookmarks.right" :side="1"/>
@@ -35,6 +35,96 @@ export default {
       }
     }
   },
+  mixins: [SideBySideOperations],
+  methods: {
+    keyEvent(e) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      const key = e.key.toLowerCase();
+      const options = storage.get('side-by-side');
+      console.log(key);
+      switch (key) {
+        case 'arrowdown': this.mouseDown(options); break;
+        case 'arrowup': this.moveUp(options); break;
+        case 'pagedown': this.pageDown(options); break;
+        case 'tab': this.switchTab(options); break;
+      }
+    },
+    /**
+     * Move down by pressing "Arrow Down" key
+     * @param options
+     */
+    mouseDown(options) {
+      const side = options.active;
+      const rowsCount = this.rowsCount(this.$el, side);
+      options[side ? 'right' : 'left']++;
+      if (options[side ? 'right' : 'left'] >= rowsCount) {
+        options[side ? 'right' : 'left'] = rowsCount - 1
+      }
+
+      this.moveSelection(this.$el, side, options[side ? 'right' : 'left'])
+
+      this.focusElement(this.$el, side, options[side ? 'right' : 'left'], false)
+
+      storage.set('side-by-side', options)
+    },
+    /**
+     * Move up by pressing "Arrow Up" key
+     * @param options
+     */
+    moveUp(options) {
+      const side = options.active;
+      options[side ? 'right' : 'left']--;
+      // Move selection up
+      if (options[side ? 'right' : 'left'] < 1) {
+        options[side ? 'right' : 'left'] = 0;
+      }
+
+      this.moveSelection(this.$el, side, options[side ? 'right' : 'left'])
+
+      this.focusElement(this.$el, side, options[side ? 'right' : 'left'])
+
+      storage.set('side-by-side', options)
+    },
+    /**
+     * Jump down by pressing "Page Down" key
+     * @param options
+     */
+    pageDown(options) {
+      const side = options.active;
+      const rowsCount = this.rowsCount(this.$el, side);
+      const elementHeight = this.$el.querySelector('.file-browser-panel-content-body-row').offsetHeight;
+      let shift = Math.floor(this.$el.querySelector('.file-browser-panel-content-body-wrap').offsetHeight / elementHeight);
+
+      options[side ? 'right' : 'left'] += shift;
+      if (rowsCount <= options[side ? 'right' : 'left']) {
+        options[side ? 'right' : 'left'] = rowsCount - 1;
+      }
+
+      const index = options[side ? 'right' : 'left'];
+
+      storage.set('side-by-side', options)
+
+      this.moveSelection(this.$el, side, index);
+
+      this.focusElement(this.$el, side, index, false)
+    },
+    /**
+     * Switch panel by press "tab" key
+     */
+    switchTab(options) {
+      // Switch the active panel
+      options.active = +!options.active;
+      // Get next tab "tabindex" attribute
+      const panels = this.$el.querySelectorAll('.file-browser-panel-wrap')
+      // Set prev tab greater "tabindex" value
+      panels[+!options.active].setAttribute('tabindex', +panels[options.active].getAttribute('tabindex') + 1)
+      // Move selection to another tab
+      this.moveSelection(this.$el, options.active, options[options.active ? 'right' : 'left'])
+
+      storage.set('side-by-side', options)
+    }
+  },
   beforeMount() {
     if (null === storage.get('bookmarks')) {
       storage.set('bookmarks', {
@@ -44,46 +134,6 @@ export default {
     }
     this.bookmarks = storage.get('bookmarks');
     this.files = storage.get('files');
-  },
-  mixins: [SideBySideOperations],
-  mounted() {
-    document.addEventListener('keyup', e => {
-      const key = e.key.toLowerCase();
-      // Press "tab" key
-      if ('tab' === key && !e.altKey && !e.ctrlKey && !e.shiftKey) {
-        const options = storage.get('side-by-side');
-        // Switch the active panel
-        options.active = +!options.active;
-        // Get next tab "tabindex" attribute
-        const panels = this.$el.querySelectorAll('.file-browser-panel-wrap')
-        // Set prev tab greater "tabindex" value
-        panels[+!options.active].setAttribute('tabindex', +panels[options.active].getAttribute('tabindex') + 1)
-        // Move selection to another tab
-        this.moveSelection(this.$el, options.active, options[options.active ? 'right' : 'left'])
-
-        storage.set('side-by-side', options)
-      }
-      // Press arrow up
-      if ('arrowup' === key) {
-        const options = storage.get('side-by-side');
-        const side = options.active;
-        options[side ? 'right' : 'left']--;
-        // Move selection up
-        options[side ? 'right' : 'left'] >= 0 && this.moveSelection(this.$el, side, options[side ? 'right' : 'left'])
-
-        storage.set('side-by-side', options)
-      }
-      // Press arrow down
-      if ('arrowdown' === key) {
-        const options = storage.get('side-by-side');
-        const side = options.active;
-        const rowsCount = this.$el.querySelectorAll('.file-browser-panel-wrap')[side].querySelectorAll('tbody tr').length;
-        options[side ? 'right' : 'left']++;
-        options[side ? 'right' : 'left'] < rowsCount && this.moveSelection(this.$el, side, options[side ? 'right' : 'left'])
-
-        storage.set('side-by-side', options)
-      }
-    })
   }
 }
 </script>

@@ -1,13 +1,13 @@
 - Side-by-side
   - ~~click panel to select row~~
   - ~~press "tab"~~
-  - move "up" button
-  - move "down" button
+  - ~~move "down" button~~
+  - ~~move "up" button~~
+  - ~~pageDown~~
   - pageUp
-  - pageDown
-  - home
   - end
-  - insert with space + get size
+  - home
+  - insert with "space" + get size
   - insert
   - get file properties via alt+enter
   - go into folder

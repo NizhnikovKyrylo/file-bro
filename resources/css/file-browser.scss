@@ -63,14 +63,6 @@
     }
   }
 
-  table {
-    background-color: white;
-    border: 1px solid #000;
-    width: 100%;
-
-    tbody tr:nth-child(even) {background-color: #f0f0f0}
-  }
-
   .file-browser-panels-wrap {
     display: flex;
     justify-content: space-between;
@@ -103,19 +95,47 @@
     }
 
     .file-browser-panel-content {
-      th, td {border: none; cursor: default; padding: 8px 8px 4px 8px}
+      background-color: white;
+      border: 1px solid #000;
+      width: 100%;
 
-      th {text-align: left; user-select: none}
+      .file-browser-panel-content-column, .file-browser-panel-content-footer-wrap {
+        border: none;
+        cursor: default;
+        padding: 8px 8px 4px 8px;
+      }
 
-      thead tr {border-bottom: 1px solid #ccc}
+      .file-browser-panel-content-header-wrap, .file-browser-panel-content-body-row {
+        align-content: center;
+        display: flex;
 
-      tbody {
-        tr.select {background-color: #8499e7}
+        .file-browser-panel-content-column {
+          position: relative;
+          text-align: left;
+          user-select: none;
+          width: 15%;
 
-        tr.insert td {color: #f22}
+          &:first-child {width: 55%}
+        }
+      }
 
-        td {
-          vertical-align: middle;
+      .file-browser-panel-content-body-wrap {
+        max-height: 65vh;
+        overflow: auto;
+      }
+
+      .file-browser-panel-content-body-row {
+        &:nth-child(even) {background-color: #f0f0f0}
+        &.select {background-color: #8499e7}
+        &.insert {color: #ff2222}
+
+        .file-browser-panel-content-column {
+          .file-browser-icon {
+            left: 4px;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+          }
 
           > span {
             font-size: 12px;
@@ -125,11 +145,17 @@
             overflow-y: hidden;
           }
 
-          &:first-child {text-align: center}
+          &:first-child > span {
+            padding: 0 10px 0 20px;
+          }
         }
       }
 
-      tfoot {font-size: 14px}
+      &:first-child {text-align: center}
+
+      .file-browser-panel-content-header-wrap {border-bottom: 1px solid #ccc}
+
+      .file-browser-panel-content-footer-wrap {font-size: 14px}
     }
 
     .file-browser-tree-list {width: calc(30% - 2px)}

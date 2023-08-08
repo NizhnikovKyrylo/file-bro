@@ -1,15 +1,23 @@
 <template>
-  <tr
+  <div
+    class="file-browser-panel-content-body-row"
     :title="`${file.basename}\n Modification date/time: ${formatDate(file.mtime)}\n Size: ${file.isDir ? 0 : fileSize(file.size)}`"
     @click="selectRowEvent"
-    @keyup.prevent="eventTab"
   >
-    <td @keyup.prevent="eventTab"><i :class="`file-browser-icon ${ fileIcon(file.isDir, file['mime-type']) }`"></i></td>
-    <td @keyup.prevent="eventTab"><span>{{ file.filename }}</span></td>
-    <td @keyup.prevent="eventTab"><span>{{ file.ext }}</span></td>
-    <td @keyup.prevent="eventTab"><span>{{ file.isDir ? '&lt;DIR&gt;' : fileSize(file.size) }}</span></td>
-    <td @keyup.prevent="eventTab"><span>{{ formatDate(file.mtime) }}</span></td>
-  </tr>
+    <div class="file-browser-panel-content-column">
+      <i :class="`file-browser-icon ${ fileIcon(file.isDir, file['mime-type']) }`"></i>
+      <span>{{ file.filename }}</span>
+    </div>
+    <div class="file-browser-panel-content-column">
+      <span>{{ file.ext }}</span>
+    </div>
+    <div class="file-browser-panel-content-column">
+      <span>{{ file.isDir ? '&lt;DIR&gt;' : fileSize(file.size) }}</span>
+    </div>
+    <div class="file-browser-panel-content-column">
+      <span>{{ formatDate(file.mtime) }}</span>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -21,9 +29,6 @@ export default {
   methods: {
     selectRowEvent() {
       this.$emit('selectRow', this.$el)
-    },
-    eventTab() {
-      console.log(111);
     }
   },
   props: {
