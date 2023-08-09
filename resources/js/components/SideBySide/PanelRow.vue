@@ -5,14 +5,14 @@
     @click="selectRowEvent"
   >
     <div class="file-browser-panel-content-column">
-      <i :class="`file-browser-icon ${ fileIcon(file.isDir, file['mime-type']) }`"></i>
+      <i :class="`file-browser-icon ${ fileIcon(file) }`"></i>
       <span>{{ file.filename }}</span>
     </div>
     <div class="file-browser-panel-content-column">
       <span>{{ file.ext }}</span>
     </div>
     <div class="file-browser-panel-content-column">
-      <span>{{ file.isDir ? '&lt;DIR&gt;' : fileSize(file.size) }}</span>
+      <span>{{ file.isDir && !file.hasOwnProperty('recognized') ? '&lt;DIR&gt;' : fileSize(file.size) }}</span>
     </div>
     <div class="file-browser-panel-content-column">
       <span>{{ formatDate(file.mtime) }}</span>

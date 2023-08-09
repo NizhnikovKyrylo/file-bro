@@ -1,8 +1,8 @@
 <template>
-  <div data-type="side-by-side" @keyup="keyEvent">
+  <div data-type="side-by-side" @keyup="keyEvent" @keydown.enter.alt.exact.prevent="getInfo">
     <div class="file-browser-panels-wrap">
-      <Panel tabindex="0" :files="files.left" :bookmarks="bookmarks.left" :side="0"/>
-      <Panel tabindex="1" :files="files.right" :bookmarks="bookmarks.right" :side="1"/>
+      <Panel tabindex="0" :files="files.left" :bookmarks="bookmarks.left || []" :side="0"/>
+      <Panel tabindex="1" :files="files.right" :bookmarks="bookmarks.right || []" :side="1"/>
     </div>
     <div class="file-browser-controls-wrap">
       <button tabindex="-1" name="rename" type="button"><span>Rename</span></button>
@@ -18,7 +18,7 @@
 
 <script>
 import {storage} from "../../storage.js";
-import Panel from "./Panel.vue"
+import Panel from "./Panel.vue";
 import {SideBySideOperations} from "../../mixin/side-by-side-operations.js";
 
 export default {
@@ -33,6 +33,13 @@ export default {
         left: [],
         right: []
       }
+    };
+  },
+  emits: ['showFileInfo'],
+  props: {
+    routes: {
+      type: Object,
+      required: true
     }
   },
   mixins: [SideBySideOperations],
@@ -44,29 +51,87 @@ export default {
       const options = storage.get('side-by-side');
       console.log(key);
       switch (key) {
-        case 'arrowdown': this.mouseDown(options); break;
-        case 'arrowup': this.moveUp(options); break;
-        case 'pagedown': this.pageDown(options); break;
-        case 'tab': this.switchTab(options); break;
+        case ' ':this.insertAndGetSize(options);break;
+        case 'arrowdown':this.moveDown(options);break;
+        case 'arrowup':this.moveUp(options);break;
+        case 'end':this.moveToEnd(options);break;
+        case 'home':this.moveToStart(options);break;
+        case 'insert':this.insert(options);break;
+        case 'pagedown':this.pageDown(options);break;
+        case 'pageup':this.pageUp(options);break;
+        case 'tab':this.switchTab(options);break;
       }
+    },
+    getInfo() {
+      const options = storage.get('side-by-side');
+      const side = options.active;
+      let file = this.files[side ? 'right' : 'left'][options[side ? 'right' : 'left']];
+
+      this.getFileInfo(file, this.routes.size).then(fileData => {
+        this.$emit('showFileInfo', fileData)
+      })
+    },
+    /**
+     * Insert element and move down
+     * @param options
+     */
+    insert(options) {
+      this.insertElement(options);
+      this.moveDown(options);
+    },
+    /**
+     * Insert element and get element size
+     * @param options
+     */
+    insertAndGetSize(options) {
+      const side = options.active;
+      const file = this.files[side ? 'right' : 'left'][options[side ? 'right' : 'left']];
+
+      this.getFileInfo(file, this.routes.size).then(fileData => {
+        this.files[side ? 'right' : 'left'][options[side ? 'right' : 'left']] = fileData
+      })
+
+      this.insertElement(options);
     },
     /**
      * Move down by pressing "Arrow Down" key
      * @param options
      */
-    mouseDown(options) {
+    moveDown(options) {
       const side = options.active;
       const rowsCount = this.rowsCount(this.$el, side);
       options[side ? 'right' : 'left']++;
       if (options[side ? 'right' : 'left'] >= rowsCount) {
-        options[side ? 'right' : 'left'] = rowsCount - 1
+        options[side ? 'right' : 'left'] = rowsCount - 1;
       }
 
-      this.moveSelection(this.$el, side, options[side ? 'right' : 'left'])
+      this.moveAndFocus(this.$el, side, options[side ? 'right' : 'left'], false);
 
-      this.focusElement(this.$el, side, options[side ? 'right' : 'left'], false)
+      storage.set('side-by-side', options);
+    },
+    /**
+     * Move to the end of list by pressing "End" key
+     * @param options
+     */
+    moveToEnd(options) {
+      const side = options.active;
+      options[side ? 'right' : 'left'] = this.rowsCount(this.$el, side) - 1;
 
-      storage.set('side-by-side', options)
+      this.moveAndFocus(this.$el, side, options[side ? 'right' : 'left'], false);
+
+      storage.set('side-by-side', options);
+    },
+    /**
+     * Move to the start of list by pressing "Home" key
+     * @param options
+     */
+    moveToStart(options) {
+      const side = options.active;
+      options[side ? 'right' : 'left'] = 0;
+
+      this.moveAndFocus(this.$el, side, 0);
+
+      storage.set('side-by-side', options);
     },
     /**
      * Move up by pressing "Arrow Up" key
@@ -80,11 +145,9 @@ export default {
         options[side ? 'right' : 'left'] = 0;
       }
 
-      this.moveSelection(this.$el, side, options[side ? 'right' : 'left'])
+      this.moveAndFocus(this.$el, side, options[side ? 'right' : 'left']);
 
-      this.focusElement(this.$el, side, options[side ? 'right' : 'left'])
-
-      storage.set('side-by-side', options)
+      storage.set('side-by-side', options);
     },
     /**
      * Jump down by pressing "Page Down" key
@@ -93,21 +156,33 @@ export default {
     pageDown(options) {
       const side = options.active;
       const rowsCount = this.rowsCount(this.$el, side);
-      const elementHeight = this.$el.querySelector('.file-browser-panel-content-body-row').offsetHeight;
-      let shift = Math.floor(this.$el.querySelector('.file-browser-panel-content-body-wrap').offsetHeight / elementHeight);
+      let shift = Math.floor(this.$el.querySelector('.file-browser-panel-content-body-wrap').offsetHeight / this.rowHeight(this.$el));
 
       options[side ? 'right' : 'left'] += shift;
       if (rowsCount <= options[side ? 'right' : 'left']) {
         options[side ? 'right' : 'left'] = rowsCount - 1;
       }
 
-      const index = options[side ? 'right' : 'left'];
+      this.moveAndFocus(this.$el, side, options[side ? 'right' : 'left'], false);
 
-      storage.set('side-by-side', options)
+      storage.set('side-by-side', options);
+    },
+    /**
+     * Jump up by pressing "Page Up" key
+     * @param options
+     */
+    pageUp(options) {
+      const side = options.active;
+      let shift = Math.floor(this.$el.querySelector('.file-browser-panel-content-body-wrap').offsetHeight / this.rowHeight(this.$el));
 
-      this.moveSelection(this.$el, side, index);
+      options[side ? 'right' : 'left'] -= shift;
+      if (options[side ? 'right' : 'left'] < 1) {
+        options[side ? 'right' : 'left'] = 0;
+      }
 
-      this.focusElement(this.$el, side, index, false)
+      this.moveAndFocus(this.$el, side, options[side ? 'right' : 'left']);
+
+      storage.set('side-by-side', options);
     },
     /**
      * Switch panel by press "tab" key
@@ -116,13 +191,13 @@ export default {
       // Switch the active panel
       options.active = +!options.active;
       // Get next tab "tabindex" attribute
-      const panels = this.$el.querySelectorAll('.file-browser-panel-wrap')
+      const panels = this.$el.querySelectorAll('.file-browser-panel-wrap');
       // Set prev tab greater "tabindex" value
-      panels[+!options.active].setAttribute('tabindex', +panels[options.active].getAttribute('tabindex') + 1)
+      panels[+!options.active].setAttribute('tabindex', +panels[options.active].getAttribute('tabindex') + 1);
       // Move selection to another tab
-      this.moveSelection(this.$el, options.active, options[options.active ? 'right' : 'left'])
+      this.moveSelection(this.$el, options.active, options[options.active ? 'right' : 'left']);
 
-      storage.set('side-by-side', options)
+      storage.set('side-by-side', options);
     }
   },
   beforeMount() {
@@ -130,10 +205,10 @@ export default {
       storage.set('bookmarks', {
         left: [{active: true, name: '/', path: '/'}],
         right: [{active: true, name: '/', path: '/'}]
-      })
+      });
     }
     this.bookmarks = storage.get('bookmarks');
     this.files = storage.get('files');
   }
-}
+};
 </script>

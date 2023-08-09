@@ -12,24 +12,41 @@
     </div>
 
     <template v-if="defaultView === 'sideBySide'">
-      <SideBySideComponent/>
+      <SideBySideComponent :routes="routes" @showFileInfo="openFileInfoPopup"/>
     </template>
+
+    <CommonModal ref="fileOverviewModal" :file="overviewFile"/>
   </div>
 </template>
 
 <script>
-import axios from "axios";
 import {storage} from "../storage.js";
+import {Requests} from "../mixin/requests.js";
+import {FileHelper} from "../mixin/file-helper.js";
+import CommonModal from "./Modals/CommonModal.vue";
 import PanelButton from "./PanelButton.vue";
 import SideBySideComponent from "./SideBySide/SideBySideComponent.vue";
 
 export default {
-  components: {SideBySideComponent, PanelButton},
+  components: {CommonModal, SideBySideComponent, PanelButton},
   data() {
     return {
+      overviewFile: {
+        access: 0,
+        changed: 0,
+        files: 0,
+        folders: 0,
+        icon: '',
+        isDir: false,
+        mod: 0,
+        name: '',
+        path: '',
+        size: 0
+      },
       defaultView: 'sideBySide'
     };
   },
+  mixins: [FileHelper, Requests],
   name: "FileBrowser",
   props: {
     viewType: {
@@ -83,29 +100,23 @@ export default {
     });
   },
   methods: {
-    /**
-     * XHR request
-     * @param props
-     * @returns {Promise<unknown>}
-     */
-    request(props) {
-      if (!props.hasOwnProperty('url')) {
-        throw new ReferenceError('The request requires url endpoint.');
+    openFileInfoPopup(file) {
+      let data = {
+        access: this.formatDate(file.atime),
+        changed: this.formatDate(file.ctime),
+        icon: this.fileIcon(file),
+        isDir: file.isDir,
+        mod: this.formatDate(file.mtime),
+        name: file.basename,
+        path: file.path + file.basename,
+        size: file.recognized ? file.size : 0
       }
-
-      // Check if method exists
-      if (!props.hasOwnProperty("method")) {
-        props.method = "get";
+      if (file.isDir) {
+        data.files = file.files;
+        data.folders = file.folders;
       }
-      // Set default headers
-      props.headers = Object.assign({
-        accept: "application/json",
-        "content-type": props.method === "patch" || props.method === "delete"
-          ? "application/x-www-form-urlencoded"
-          : "multipart/form-data"
-      }, props.headers || {});
-
-      return axios(props)
+      this.overviewFile = data;
+      this.$refs.fileOverviewModal.show = true;
     }
   }
 };

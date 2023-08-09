@@ -4,12 +4,12 @@
   - ~~move "down" button~~
   - ~~move "up" button~~
   - ~~pageDown~~
-  - pageUp
-  - end
-  - home
-  - insert with "space" + get size
-  - insert
-  - get file properties via alt+enter
+  - ~~pageUp~~
+  - ~~end~~
+  - ~~home~~
+  - ~~insert~~
+  - ~~insert with "space" + get size~~
+  - ~~get file properties via alt+enter~~
   - go into folder
     - enter
     - mouse double-click // dblclick

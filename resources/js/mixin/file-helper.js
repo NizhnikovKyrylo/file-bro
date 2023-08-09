@@ -74,15 +74,14 @@ export const FileHelper = {
   methods: {
     /**
      * Get file icon by file properties
-     * @param {boolean} isDir
-     * @param {string} fileMime
+     * @param file
      * @returns {string|string|string}
      */
-    fileIcon(isDir, fileMime) {
-      if (isDir) {
+    fileIcon(file) {
+      if (file.isDir) {
         return 'folder-icon';
       } else {
-        const icon = Object.keys(this.mimeTypes).find(icon => this.mimeTypes[icon].includes(fileMime));
+        const icon = Object.keys(this.mimeTypes).find(icon => this.mimeTypes[icon].includes(file['mime-type']));
         return icon ? icon : 'file-regular';
       }
     },
@@ -93,8 +92,8 @@ export const FileHelper = {
      */
     fileSize(size) {
       const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-      const value = Math.floor(Math.log(Math.abs(size)) / Math.log(1024));
-      return (size / Math.pow(1024, value)).toFixed(1) + ' ' + units[value];
+      const value = size > 0 ? Math.floor(Math.log(Math.abs(size)) / Math.log(1024)) : 0;
+      return (size > 0 ? (size / Math.pow(1024, value)).toFixed(1) : 0) + ' ' + units[value];
     },
     /**
      * Convert Unix timestamp to date format j.M.Y H:i:s

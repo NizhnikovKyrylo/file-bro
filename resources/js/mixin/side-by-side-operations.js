@@ -1,7 +1,8 @@
 import {FileHelper} from "./file-helper.js";
+import {Requests} from "./requests.js";
 
 export const SideBySideOperations = {
-  mixins: [FileHelper],
+  mixins: [FileHelper, Requests],
   methods: {
     /**
      * Clear "select" class from all rows and return panel list
@@ -29,14 +30,16 @@ export const SideBySideOperations = {
     focusElement(el, side, index, directionUp = true) {
       const panel = el.querySelectorAll('.file-browser-panel-wrap')[side];
       const scrollPosition = panel.querySelector('.file-browser-panel-content-body-wrap').scrollTop;
-      const elementHeight = el.querySelector('.file-browser-panel-content-body-row').offsetHeight;
+      const elementHeight = this.rowHeight(el);
 
-      const offset = directionUp ? scrollPosition : panel.offsetHeight - scrollPosition;
+      const condition = directionUp
+        ? (1 + index) * elementHeight <= scrollPosition
+        : (2 + index) * elementHeight > (panel.offsetHeight - scrollPosition);
 
       // Focus on the selected element
-      if (offset < (2 + index) * elementHeight) {
-        panel.querySelectorAll('.file-browser-panel-content-body-wrap .file-browser-panel-content-body-row')[index].scrollIntoView(!0);
-      }
+      condition && panel
+        .querySelectorAll('.file-browser-panel-content-body-wrap .file-browser-panel-content-body-row')[index]
+        .scrollIntoView(true);
     },
     /**
      * Highlight selected element
@@ -57,6 +60,24 @@ export const SideBySideOperations = {
      */
     getIndex: el => Object.values(el.parentNode.childNodes).filter(value => value.nodeType === 1).indexOf(el),
     /**
+     * Get file size
+     * @param file
+     * @param route
+     */
+    getFileInfo(file, route) {
+      return new Promise(resolve => {
+        if (file.isDir && !file.hasOwnProperty('recognized')) {
+          this.request(Object.assign(route, {data: {path: file.path + file.basename}})).then(response => {
+            if (200 === response.status) {
+              resolve(Object.assign(file, response.data, {recognized: true}));
+            }
+          });
+        } else {
+          resolve(file)
+        }
+      })
+    },
+    /**
      * Get element side and index as array
      * @param el
      * @returns {number[]}
@@ -66,6 +87,16 @@ export const SideBySideOperations = {
         this.getIndex(el.closest('.file-browser-panel-wrap')),
         this.getIndex(el)
       ];
+    },
+    /**
+     * Add or remove "insert" class of the element
+     * @param options
+     */
+    insertElement(options) {
+      const side = options.active;
+      this.$el.querySelectorAll('.file-browser-panel-wrap')[side]
+        .querySelectorAll('.file-browser-panel-content-body-wrap .file-browser-panel-content-body-row')[options[side ? 'right' : 'left']]
+        .classList.toggle('insert')
     },
     /**
      * Select row
@@ -81,6 +112,11 @@ export const SideBySideOperations = {
       // Select current row
       this.forceSelectItem(parent, side, index);
     },
+    moveAndFocus(el, side, index, directionUp = true) {
+      this.moveSelection(this.$el, side, index);
+
+      this.focusElement(this.$el, side, index, directionUp);
+    },
     /**
      * Get rows number
      * @param el
@@ -91,6 +127,14 @@ export const SideBySideOperations = {
       return el.querySelectorAll('.file-browser-panel-wrap')[side]
         .querySelectorAll('.file-browser-panel-content-body-wrap .file-browser-panel-content-body-row')
         .length;
+    },
+    /**
+     * Get row height
+     * @param el
+     * @returns {number}
+     */
+    rowHeight(el) {
+      return el.querySelector('.file-browser-panel-content-body-row').offsetHeight;
     }
   }
 };
