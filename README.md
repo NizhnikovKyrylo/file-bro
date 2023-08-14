@@ -11,7 +11,7 @@
   - ~~insert with "space" + get size~~
   - ~~get file properties via alt+enter~~
   - go into folder
-    - enter
+    - ~~enter~~
     - mouse double-click // dblclick
   - go upper folder
     - mouse

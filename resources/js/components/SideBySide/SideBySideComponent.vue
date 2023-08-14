@@ -69,7 +69,10 @@ export default {
         const file = this.files[side][options[side]];
 
         if (file.isDir) {
-          const path = file.nested ? file.path : file.path + file.basename
+          let path = file.filename === '[..]' ? file.path.replace(/\/$/, "").split('/').slice(0, -1).join('/') : file.path + file.basename;
+          if (!path || !path.length) {
+            path = '/';
+          }
 
           this.request(Object.assign(this.routes.list, {data: {path: path}})).then(response => {
             if (200 === response.status) {
@@ -79,7 +82,7 @@ export default {
               let files = [];
 
               path !== '/' && files.push({
-                path: "/",
+                path: path,
                 atime: file.atime,
                 basename: file.basename,
                 ctime: file.ctime,
@@ -88,7 +91,6 @@ export default {
                 isDir: true,
                 'mime-type': null,
                 mtime: file.mtime,
-                nested: true,
                 size: 4096,
                 type: file.type
               })
@@ -96,10 +98,12 @@ export default {
               let index = 0;
               for (let i = 0, n = response.data.length; i < n; i++) {
                 files.push(response.data[i])
-                if (file.basename === files[i].basename) {
+                if (file.path === (files[i].path + files[i].basename)) {
                   index = i;
                 }
               }
+
+              console.log(index);
 
               this.files[side] = files;
 
@@ -107,9 +111,9 @@ export default {
 
               storage.set('side-by-side', options);
               setTimeout(() => {
-                this.clearSelected(this.$el)
-                this.forceSelectItem(this.$el, options.active, index);
-              }, 20)
+                this.moveSelection(this.$el, options.active, index)
+                this.focusElement(this.$el, options.active, index, false);
+              }, 40)
             }
           })
         }

@@ -32,7 +32,11 @@ export const SideBySideOperations = {
      * @param {boolean} directionUp
      */
     focusElement(el, side, index, directionUp = true) {
-      const panel = el.querySelectorAll('.file-browser-panel-wrap')[side];
+      const parent = null === el.closest('.file-browser-panels-wrap')
+        ? el.querySelector('.file-browser-panels-wrap')
+        : el.closest('.file-browser-panels-wrap')
+
+      const panel = parent.querySelectorAll('.file-browser-panel-wrap')[side];
       const scrollPosition = panel.querySelector('.file-browser-panel-content-body-wrap').scrollTop;
       const elementHeight = this.rowHeight(el);
 
