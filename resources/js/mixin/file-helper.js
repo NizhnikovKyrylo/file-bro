@@ -79,7 +79,7 @@ export const FileHelper = {
      */
     fileIcon(file) {
       if (file.isDir) {
-        return 'folder-icon';
+        return 'nested' in file && file.nested ? 'up-folder-icon' : 'folder-icon';
       } else {
         const icon = Object.keys(this.mimeTypes).find(icon => this.mimeTypes[icon].includes(file['mime-type']));
         return icon ? icon : 'file-regular';

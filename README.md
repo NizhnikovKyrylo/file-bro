@@ -16,6 +16,9 @@
   - go upper folder
     - mouse
     - press "left" button
+  - Mouse left click
+    - with shift
+    - with control
   - Sort/Change file order
     - name
     - ext

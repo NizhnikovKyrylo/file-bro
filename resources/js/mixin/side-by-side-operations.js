@@ -10,7 +10,11 @@ export const SideBySideOperations = {
      * @returns {*}
      */
     clearSelected: el => {
-      const panels = Array.from(el.closest('.file-browser-panels-wrap').querySelectorAll('.file-browser-panel-wrap'));
+      const parent = null === el.closest('.file-browser-panels-wrap')
+        ? el.querySelector('.file-browser-panels-wrap')
+        : el.closest('.file-browser-panels-wrap')
+
+      const panels = Array.from(parent.querySelectorAll('.file-browser-panel-wrap'));
 
       panels.forEach(
         panel => Array
@@ -48,7 +52,11 @@ export const SideBySideOperations = {
      * @param {int} i
      */
     forceSelectItem(el, side, i) {
-      el.closest('.file-browser-panels-wrap')
+      const parent = null === el.closest('.file-browser-panels-wrap')
+        ? el.querySelector('.file-browser-panels-wrap')
+        : el.closest('.file-browser-panels-wrap')
+
+      parent
         .querySelectorAll('.file-browser-panel-wrap')[side]
         .querySelectorAll('.file-browser-panel-content-body-wrap .file-browser-panel-content-body-row')[i]
         .classList.add('select');

@@ -5,7 +5,7 @@
     <div class="file-browser-modal-content-wrap">
       <div class="file-browser-modal-content-file-property">
         <span><i :class="`file-browser-icon ${file.icon}`"></i></span>
-        <span>{{ file.name }}</span>
+        <span>{{ file.basename }}</span>
       </div>
 
       <div class="file-browser-modal-content-file-property">

@@ -98,6 +98,9 @@
     .file-browser-panel-content {
       background-color: white;
       border: 1px solid #000;
+      height: calc(100% - 26px);
+      padding-bottom: 26px;
+      position: relative;
       width: 100%;
 
       .file-browser-panel-content-column, .file-browser-panel-content-footer-wrap {
@@ -153,7 +156,14 @@
 
       .file-browser-panel-content-header-wrap {border-bottom: 1px solid #ccc}
 
-      .file-browser-panel-content-footer-wrap {font-size: 14px}
+      .file-browser-panel-content-footer-wrap {
+        background-color: white;
+        bottom: 0;
+        font-size: 14px;
+        left: 0;
+        position: absolute;
+        width: 100%;
+      }
     }
 
     .file-browser-tree-list {width: calc(30% - 2px)}
@@ -290,5 +300,7 @@
     &.tree-view-icon {mask-image: url("../icons/tree-view.svg")}
 
     &.unselect-all-icon {mask-image: url("../icons/unselect-all.svg")}
+
+    &.up-folder-icon {mask-image: url("../icons/arrow-up.svg")}
   }
 }
