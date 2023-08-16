@@ -52,8 +52,10 @@ export default {
       console.log(key);
       switch (key) {
         case ' ':this.insertAndGetSize(options);break;
-        case 'arrowdown':this.moveDown(options);break;
         case 'arrowup':this.moveUp(options);break;
+        case 'arrowright': this.folderData(options, e); break;
+        case 'arrowdown':this.moveDown(options);break;
+        case 'arrowleft': this.moveBack(options); break;
         case 'end':this.moveToEnd(options);break;
         case 'enter': this.folderData(options, e); break;
         case 'home':this.moveToStart(options);break;
@@ -69,52 +71,18 @@ export default {
         const file = this.files[side][options[side]];
 
         if (file.isDir) {
-          let path = file.filename === '[..]' ? file.path.replace(/\/$/, "").split('/').slice(0, -1).join('/') : file.path + file.basename;
-          if (!path || !path.length) {
-            path = '/';
-          }
+          this.getFolderContent(file).then(data => {
+            this.bookmarks[side][0].name = file.basename;
+            this.bookmarks[side][0].path = data.path + '/';
+            this.files[side] = data.files;
 
-          this.request(Object.assign(this.routes.list, {data: {path: path}})).then(response => {
-            if (200 === response.status) {
-              this.bookmarks[side][0].name = file.basename;
-              this.bookmarks[side][0].path = path + '/';
+            options[side] = data.index;
 
-              let files = [];
-
-              path !== '/' && files.push({
-                path: path,
-                atime: file.atime,
-                basename: file.basename,
-                ctime: file.ctime,
-                ext: "",
-                filename: "[..]",
-                isDir: true,
-                'mime-type': null,
-                mtime: file.mtime,
-                size: 4096,
-                type: file.type
-              })
-
-              let index = 0;
-              for (let i = 0, n = response.data.length; i < n; i++) {
-                files.push(response.data[i])
-                if (file.path === (files[i].path + files[i].basename)) {
-                  index = i;
-                }
-              }
-
-              console.log(index);
-
-              this.files[side] = files;
-
-              options[side] = index;
-
-              storage.set('side-by-side', options);
-              setTimeout(() => {
-                this.moveSelection(this.$el, options.active, index)
-                this.focusElement(this.$el, options.active, index, false);
-              }, 40)
-            }
+            storage.set('side-by-side', options);
+            setTimeout(() => {
+              this.moveSelection(this.$el, options.active, data.index)
+              this.focusElement(this.$el, options.active, data.index, false);
+            }, 40)
           })
         }
       }
@@ -152,6 +120,29 @@ export default {
       })
 
       this.insertElement(options);
+    },
+    /**
+     * Go to the parent folder
+     * @param options
+     */
+    moveBack(options) {
+      const side = options.active ? 'right' : 'left'
+      const file = this.files[side][0]
+      if (file.filename === '[..]') {
+        this.getFolderContent(file).then(data => {
+          this.bookmarks[side][0].name = file.basename;
+          this.bookmarks[side][0].path = data.path + '/';
+          this.files[side] = data.files;
+
+          options[side] = data.index;
+
+          storage.set('side-by-side', options);
+          setTimeout(() => {
+            this.moveSelection(this.$el, options.active, data.index)
+            this.focusElement(this.$el, options.active, data.index, false);
+          }, 40)
+        })
+      }
     },
     /**
      * Move down by pressing "Arrow Down" key

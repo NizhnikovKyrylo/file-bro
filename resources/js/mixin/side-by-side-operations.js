@@ -1,5 +1,6 @@
 import {FileHelper} from "./file-helper.js";
 import {Requests} from "./requests.js";
+import {storage} from "../storage.js";
 
 export const SideBySideOperations = {
   mixins: [FileHelper, Requests],
@@ -87,6 +88,53 @@ export const SideBySideOperations = {
         } else {
           resolve(file)
         }
+      })
+    },
+    /**
+     * Get folder tree
+     * @param file
+     * @returns {Promise<unknown>}
+     */
+    getFolderContent(file) {
+      return new Promise (resolve  => {
+        let path = file.filename === '[..]' ? file.path.replace(/\/$/, "").split('/').slice(0, -1).join('/') : file.path + file.basename;
+        if (!path || !path.length) {
+          path = '/';
+        }
+
+        this.request(Object.assign(this.routes.list, {data: {path: path}})).then(response => {
+          if (200 === response.status) {
+            let files = [];
+
+            path !== '/' && files.push({
+              path: path,
+              atime: file.atime,
+              basename: file.basename,
+              ctime: file.ctime,
+              ext: "",
+              filename: "[..]",
+              isDir: true,
+              'mime-type': null,
+              mtime: file.mtime,
+              size: 4096,
+              type: file.type
+            })
+
+            let index = 0;
+            for (let i = 0, n = response.data.length; i < n; i++) {
+              files.push(response.data[i])
+              if (file.path === (files[i].path + files[i].basename)) {
+                index = i;
+              }
+            }
+
+            resolve({
+              files: files,
+              path: path,
+              index: index
+            })
+          }
+        })
       })
     },
     /**

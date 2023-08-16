@@ -25,7 +25,7 @@
 
       <div class="file-browser-panel-content-body-wrap">
         <template v-for="(file, i) in files">
-          <PanelRow :file="file" :index="i" :side="side" @selectRow="rowClick"/>
+          <PanelRow :file="file" :index="i" :side="side" @selectRow="rowClick" @openFolder="showFile"/>
         </template>
       </div>
 
@@ -77,6 +77,13 @@ export default {
   },
   mixins: [SideBySideOperations],
   methods: {
+    showFile(el) {
+      if (null !== el.closest('.file-browser-panel-content-body-wrap')) {
+        // Get file-browser options
+        let options = storage.get('side-by-side')
+        console.log(options);
+      }
+    },
     // Row click event
     rowClick(el) {
       if (null !== el.closest('.file-browser-panel-content-body-wrap')) {

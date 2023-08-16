@@ -10,13 +10,15 @@
   - ~~insert~~
   - ~~insert with "space" + get size~~
   - ~~get file properties via alt+enter~~
-  - go into folder
+  - ~~go into folder~~
     - ~~enter~~
-    - mouse double-click // dblclick
-  - go upper folder
-    - mouse
-    - press "left" button
-  - Mouse left click
+    - ~~right button~~
+  - ~~go upper folder~~
+    - ~~press "left" button~~
+  - mouse double-click
+    - folder
+    - file
+  - mouse left click
     - with shift
     - with control
   - Sort/Change file order

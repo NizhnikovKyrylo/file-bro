@@ -24,11 +24,22 @@
 import {FileHelper} from "../../mixin/file-helper.js";
 
 export default {
+  data() {
+    return {
+      event: null,
+      timer: null
+    }
+  },
   mixins: [FileHelper],
-  emits: ['selectRow'],
+  emits: ['openFile', 'selectRow'],
   methods: {
-    selectRowEvent() {
-      this.$emit('selectRow', this.$el)
+    selectRowEvent(e) {
+      if (e.detail === 1) {
+        this.$emit('selectRow', this.$el)
+      }
+      if (e.detail > 1) {
+        this.$emit('openFile', this.$el)
+      }
     }
   },
   props: {
