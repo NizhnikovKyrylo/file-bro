@@ -1,20 +1,20 @@
 - Side-by-side
-  - ~~click panel to select row~~
-  - ~~press "tab"~~
-  - ~~move "down" button~~
-  - ~~move "up" button~~
-  - ~~pageDown~~
-  - ~~pageUp~~
-  - ~~end~~
-  - ~~home~~
-  - ~~insert~~
-  - ~~insert with "space" + get size~~
-  - ~~get file properties via alt+enter~~
-  - ~~go into folder~~
-    - ~~enter~~
-    - ~~right button~~
-  - ~~go upper folder~~
-    - ~~press "left" button~~
+  - click panel to select row
+  - press "tab"
+  - move "down" button
+  - move "up" button
+  - pageDown
+  - pageUp
+  - end
+  - home
+  - insert
+  - insert with "space" + get size
+  - get file properties via alt+enter
+  - go into folder
+    - enter
+    - right button
+  - go upper folder
+    - press "left" button
   - mouse double-click
     - folder
     - file
@@ -48,4 +48,3 @@
     - paste
     - ========
     - show file properties
-  - bookmarks

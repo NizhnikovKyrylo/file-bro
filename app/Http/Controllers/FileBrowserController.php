@@ -37,14 +37,12 @@ class FileBrowserController extends Controller
         $to = $this->fullPath($request->validated('to'));
 
         try {
+            // Check if destination folder exists
+            $to = $this->createFolder($this->cap($to) . pathinfo($from, PATHINFO_BASENAME));
             if (is_dir($from)) {
-                // Check if destination folder exists
-                $to = $this->createFolder($this->cap($to) . pathinfo($from, PATHINFO_BASENAME));
                 // Copy folder
                 $this->recursiveCopy($from, $to);
             } else {
-                // Check if destination folder exists
-                $to = $this->createFolder($this->cap($to)) . pathinfo($from, PATHINFO_BASENAME);
                 // Copy file
                 copy($from, $to);
             }
