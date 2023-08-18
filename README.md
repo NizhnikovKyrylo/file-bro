@@ -4,8 +4,33 @@
   - tree view
   - list view
   - side by side
-- Side-by-side 
-  - Panel structure
+- Tree view
+  - HTML structure
+  - Get files
+  ```
+    panels: {
+      left: {
+        folders: []
+        active: path string (string)
+      }
+      right: {
+        active: 0...n acive file index (int)
+        files: []
+      }
+    }
+  ```
+- List view
+  - HTML structure
+  - Get files
+  ```
+    panels: {
+      active: acive file path (string) 
+      files: []
+    }
+  ```
+- Side-by-side
+  - HTML structure
+  - Get files
     ```
     panels: {
       left: {
@@ -13,10 +38,13 @@
         bookmarks: [
           {
             active: true/false (the bookmark is active),
-            name: Folder name
-            path: '/some path',
+            name: Folder name (string)
+            path: '/some path', (string)
             locked: true/false,
-            files: []
+            files: {
+              active: 0...n acive file index (int)
+              list: []
+            }
           }
         ]
       }
@@ -26,7 +54,6 @@
       }
     }
     ```
-  - Get file list
   - bookmarks
     - context menu
     - copy
