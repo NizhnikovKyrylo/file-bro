@@ -1,10 +1,219 @@
+$gray: #ebebeb;
+
+.file-browser-wrap, .file-browser-wrap * {
+  font-family: Arial, Helvetica, sans-serif;
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+
+  ul {list-style: none}
+
+  .preload {
+    background-image: url("../icons/preload.svg");
+    background-position: 50% 50%;
+    background-repeat: no-repeat;
+    background-size: 100px;
+    width: 100%;
+    height: 400px;
+
+    &.error {
+      align-items: center;
+      background: none;
+      color: red;
+      display: flex;
+      justify-content: center;
+      font-size: 20px;
+    }
+  }
+}
+
+.file-browser-wrap {
+  .top-panel-wrap {
+    align-items: center;
+    background-color: $gray;
+    display: flex;
+
+    ul {
+      width: 240px;
+      display: flex;
+
+      li {
+        button {
+          background-color: $gray;
+          border: none;
+          cursor: pointer;
+          padding: 4px 8px;
+        }
+
+        .file-browser-icon {
+          background-color: black;
+          height: 20px;
+          width: 20px;
+        }
+
+        &:hover, &.active {
+          button {background-color: black}
+
+          .file-browser-icon {background-color: white}
+        }
+      }
+    }
+
+    .path-input {
+      border: none;
+      font-size: 18px;
+      line-height: 18px;
+      min-width: 320px;
+      outline: none;
+      padding: 4px 12px;
+      width: calc(100% - 241px);
+    }
+  }
+}
+
+.file-browser-tree-view-wrap {
+  align-items: stretch;
+  display: flex;
+  min-height: 400px;
+
+  .file-browser-tree-folder-list {
+    min-width: 320px;
+    overflow: auto;
+    width: 30%;
+
+    ul {
+      padding: 10px;
+
+      li {
+        user-select: none;
+
+        .folder-wrap {
+          align-items: center;
+          cursor: pointer;
+          display: flex;
+        }
+
+        .file-name {margin-left: 10px}
+
+        .close {display: block}
+
+        .open {display: none}
+
+        &.active {
+          .close {display: none}
+
+          .open {display: block}
+        }
+      }
+    }
+  }
+}
+
+.file-browser-list-view-wrap {
+  ul {
+    padding: 10px;
+  }
+}
+
+.file-browser-commander-view-wrap {
+  background-color: $gray;
+  display: flex;
+
+  .file-browser-commander-panel-wrap {
+    width: calc(50% - 8px);
+
+    &:nth-child(odd) {margin-right: 8px}
+
+    &:nth-child(even) {margin-left: 8px}
+  }
+
+  .commander-bookmarks-list {
+    background-color: $gray;
+    border-bottom: 1px solid black;
+    align-items: flex-end;
+    display: flex;
+    height: 30px;
+    width: 100%;
+
+    li {
+      cursor: pointer;
+      padding: 4px 8px 2px 8px;
+
+      &.active {
+        background-color: white;
+        border: 1px solid gray;
+        border-bottom: none;
+        border-top-left-radius: 5px;
+        border-top-right-radius: 5px;
+        font-weight: bold;
+        min-width: 30px;
+        padding-top: 8px;
+        text-align: center;
+      }
+    }
+  }
+
+  .commander-file-list-wrap {
+    background-color: white;
+
+    .commander-file-list-header, .commander-file-list-row {
+      align-items: center;
+      background-color: white;
+      display: flex;
+      flex-wrap: nowrap;
+
+      .commander-file-list-column {
+        align-items: center;
+        border-left: 1px solid $gray;
+        cursor: pointer;
+        display: flex;
+        font-size: 14px;
+        padding: 6px 12px;
+        position: relative;
+        width: 100px;
+
+        &:first-child {border: none; width: calc(100% - 380px)}
+
+        &:last-child {width: 180px}
+      }
+    }
+
+    .commander-file-list-header {
+      border-bottom: 1px solid black;
+
+      .commander-file-list-column .file-browser-icon {margin-left: 4px}
+    }
+
+    .commander-file-list-row {
+      &:nth-child(even) {background-color: $gray}
+
+      .commander-file-list-column {
+        .file-browser-icon {
+          position: absolute;
+          left: 4px;
+          top: 50%;
+          transform: translateY(-50%);
+        }
+        span {
+          overflow: hidden;
+          white-space: nowrap;
+        }
+
+        &:first-child span {padding-left: 22px}
+      }
+    }
+  }
+}
+
 .file-browser-icon {
   background-color: #000;
   display: inline-block;
-  height: 20px;
+  height: 16px;
   mask-position: 50%;
   mask-repeat: no-repeat;
-  width: 20px;
+  width: 16px;
+
+  &.arrow-up {mask-image: url("../icons/arrow-up.svg")}
 
   &.file-alt {mask-image: url("../icons/file-alt.svg")}
 
@@ -31,6 +240,8 @@
   &.file-word {mask-image: url("../icons/file-word.svg")}
 
   &.folder-icon {mask-image: url("../icons/folder.svg")}
+
+  &.folder-open-icon {mask-image: url("../icons/folder-open.svg")}
 
   &.list-view-icon {mask-image: url("../icons/list-view.svg")}
 

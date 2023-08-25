@@ -1,62 +1,16 @@
 - Top panel bar
-  - Elements
-  - Reload
-  - tree view
-  - list view
-  - side by side
+  - refresh
+  - select all
+  - unselect all
 - Tree view
-  - HTML structure
-  - Get files
-  ```
-    panels: {
-      left: {
-        folders: []
-        active: path string (string)
-      }
-      right: {
-        active: 0...n acive file index (int)
-        files: []
-      }
-    }
-  ```
 - List view
-  - HTML structure
-  - Get files
-  ```
-    panels: {
-      active: acive file path (string) 
-      files: []
-    }
-  ```
 - Side-by-side
   - HTML structure
-  - Get files
-    ```
-    panels: {
-      left: {
-        active: true/false (the panel is active),
-        bookmarks: [
-          {
-            active: true/false (the bookmark is active),
-            name: Folder name (string)
-            path: '/some path', (string)
-            locked: true/false,
-            files: {
-              active: 0...n acive file index (int)
-              list: []
-            }
-          }
-        ]
-      }
-      },
-      right: {
-       --- // ---
-      }
-    }
-    ```
+  - ~~Get files~~
   - bookmarks
     - context menu
-    - copy
+    - new
+    - copy 
     - rename
     - lock/unlock
     - close

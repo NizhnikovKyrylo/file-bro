@@ -115,7 +115,7 @@ class FileBrowserController extends Controller
             }
         }
 
-        return response()->json(array_values($result->sortByDesc(['isDir', 'name'])->toArray()));
+        return response()->json($result);
     }
 
     /**
