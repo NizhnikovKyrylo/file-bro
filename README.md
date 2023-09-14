@@ -5,18 +5,19 @@
 - Tree view
 - List view
 - Side-by-side
-  - HTML structure
+  - ~~HTML structure~~
   - ~~Get files~~
+  - ~~click panel to select row~~
+  - ~~press "tab"~~
   - bookmarks
     - context menu
-    - new
-    - copy 
-    - rename
-    - lock/unlock
-    - close
-    - close all
-  - click panel to select row
-  - press "tab"
+      - new
+      - copy
+      - rename
+      - lock/unlock
+      - close
+      - close all
+    - click
   - move "down" button
   - move "up" button
   - pageDown

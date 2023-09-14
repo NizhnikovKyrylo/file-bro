@@ -1,6 +1,6 @@
 <template>
-  <div class="commander-file-list-row">
-    <div class="commander-file-list-column">
+  <div class="commander-file-list-row" :class="{selected: selected}" @click="selectRow">
+    <div class="commander-file-list-column" :title="`${file.filename}.${file.ext}`">
       <i :class="`file-browser-icon ${ fileIcon(file) }`"></i>
       <span>{{ file.filename }}</span>
     </div>
@@ -18,16 +18,37 @@
 
 <script>
 export default {
+  emits: ['selectRow'],
   props: {
     file: {
       type: Object,
       required: true
+    },
+    index: {
+      type: Number,
+      required: true
+    },
+    panel: {
+      type: String,
+      required: true
+    },
+    selected: {
+      type: Boolean,
+      default: false
     }
   },
   inject: {
     fileIcon: 'fileIcon',
     fileSize: 'fileSize',
     formatDate: 'formatDate'
+  },
+  methods: {
+    /**
+     * Click row event
+     */
+    selectRow() {
+      this.$emit('selectRow', {i: this.index, panel: this.panel})
+    }
   }
 }
 </script>

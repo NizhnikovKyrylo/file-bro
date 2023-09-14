@@ -30,7 +30,14 @@
           </div>
 
           <template v-if="panels[panel].bookmarks.length">
-            <ListRow v-for="file in getBookmarksFiles(panel)" :file="file"/>
+            <ListRow
+              v-for="(file, i) in getBookmarksFiles(panel)"
+              :file="file"
+              :index="i"
+              :selected="panels.active === panel && i === panels[panel].bookmarks[panels[panel].shownBookmarkIndex].files.selected"
+              :panel="panel"
+              @selectRow="rowSelected"
+            />
           </template>
 
           <div class="commander-file-list-header">
@@ -112,6 +119,22 @@ export default {
       return typeof this.panels[panel].bookmarks[index] !== 'undefined' && this.panels[panel].bookmarks[index].hasOwnProperty('files')
         ?  this.panels[panel].bookmarks[index].files.list
         : []
+    },
+    /**
+     * Select row click
+     * @param data
+     */
+    rowSelected(data) {
+      // Set active panel
+      this.panels.active = data.panel;
+      const bookmarks = this.panels[this.panels.active].bookmarks;
+      for (let i = 0, n = bookmarks.length; i < n; i++) {
+        if (bookmarks[i].active) {
+          // Set selected file position
+          bookmarks[i].files.selected = data.i;
+          break;
+        }
+      }
     }
   },
   beforeMount() {
@@ -123,9 +146,18 @@ export default {
         files.sort((a, b) => this.sortFiles(a, b)).reverse().sort((a, b) => this.sortFiles(a, b, 'isDir')).reverse();
 
         this.panels.left.bookmarks.push(this.defaultBookmark(files, true))
-        this.panels.right.bookmarks.push(this.defaultBookmark(files))
+        this.panels.right.bookmarks.push(this.defaultBookmark(files, true))
       }
     });
+  },
+  mounted() {
+    // Change panel with 'tab' press
+    document.onkeydown = e => {
+      if ('tab' === e.key.toLowerCase()) {
+        e.preventDefault()
+        this.panels.active = 'left' === this.panels.active ? 'right' : 'left';
+      }
+    }
   }
 };
 </script>

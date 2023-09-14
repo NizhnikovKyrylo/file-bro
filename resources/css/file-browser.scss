@@ -1,4 +1,5 @@
 $gray: #ebebeb;
+$violet: #b164e5;
 
 .file-browser-wrap, .file-browser-wrap * {
   font-family: Arial, Helvetica, sans-serif;
@@ -155,6 +156,8 @@ $gray: #ebebeb;
 
   .commander-file-list-wrap {
     background-color: white;
+    border-left: 1px solid transparent;
+    border-right: 1px solid transparent;
 
     .commander-file-list-header, .commander-file-list-row {
       align-items: center;
@@ -164,10 +167,10 @@ $gray: #ebebeb;
 
       .commander-file-list-column {
         align-items: center;
-        border-left: 1px solid $gray;
         cursor: pointer;
         display: flex;
         font-size: 14px;
+        height: 28px;
         padding: 6px 12px;
         position: relative;
         width: 100px;
@@ -187,6 +190,9 @@ $gray: #ebebeb;
     .commander-file-list-row {
       &:nth-child(even) {background-color: $gray}
 
+
+      &.selected {background-color: $violet; color: white}
+
       .commander-file-list-column {
         .file-browser-icon {
           position: absolute;
@@ -202,6 +208,11 @@ $gray: #ebebeb;
         &:first-child span {padding-left: 22px}
       }
     }
+  }
+
+  .file-browser-commander-panel-wrap.active .commander-file-list-wrap {
+    border-left: 1px solid black;
+    border-right: 1px solid black;
   }
 }
 
