@@ -44,7 +44,7 @@
           <div class="commander-file-list-header">
             <div class="commander-file-list-column">
               .filter(i => i.isDir).length
-              files: {{ typeof getBookmarksFiles(panel)}} {{ Array.isArray(getBookmarksFiles(panel)) }};
+              files: {{ typeof getBookmarksFiles(panel) }} {{ Array.isArray(getBookmarksFiles(panel)) }};
 
               &nbsp;&nbsp;&nbsp;&nbsp;
               folders: {{ typeof getBookmarksFiles(panel) }} {{ Array.isArray(getBookmarksFiles(panel)) }};
@@ -125,23 +125,37 @@ export default {
      * @param data
      */
     bookmarkRemove(data) {
-      if (this.panels[data.panel].bookmarks.length > 1) {
-        const activeRemoved = this.panels[data.panel].bookmarks[data.i].active;
-        this.panels[data.panel].bookmarks.splice(data.i, 1);
+      const bookmarks = this.panels[data.panel].bookmarks;
+      if (bookmarks.length > 1) {
+        // The active tab was removed
+        const activeRemoved = bookmarks[data.i].active;
+        // Remove tab
+        bookmarks.splice(data.i, 1);
+        // If active tab was removed
         if (activeRemoved) {
-          const index = this.panels[data.panel].bookmarks.length - 1;
+          // Show the last tab as active
+          const index = bookmarks.length - 1;
           this.panels[data.panel].shownBookmarkIndex = index;
-          this.panels[data.panel].bookmarks[index].active = true
+          bookmarks[index].active = true;
         }
       }
     },
     /**
-     *
-     * @param data
+     * Close all bookmarks except the active one
+     * @param {string} panel
      */
-    bookmarkRemoveAll(data) {
-      this.panels[data.panel].shownBookmarkIndex = 0;
-      this.panels[data.panel].bookmarks = [Object.assign({}, this.panels[data.panel].bookmarks[data.i])];
+    bookmarkRemoveAll(panel) {
+      const bookmarks = this.panels[panel].bookmarks;
+      // Get the active bookmark index
+      let index = 0;
+      for (let i = 0, n = bookmarks.length; i < n; i++) {
+        if (bookmarks[i].active) {
+          index = i;
+          break;
+        }
+      }
+      this.panels[panel].shownBookmarkIndex = 0;
+      this.panels[panel].bookmarks = [Object.assign({}, bookmarks[index])];
     },
     /**
      * Set new name to the bookmark

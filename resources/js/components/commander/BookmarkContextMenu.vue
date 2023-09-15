@@ -37,7 +37,7 @@ export default {
      * Close all bookmarks except the current one
      */
     closeAll() {
-      this.$emit('closeAll', {i: this.index, panel: this.panel})
+      this.$emit('closeAll', this.panel)
       this.show = false;
     },
     /**
