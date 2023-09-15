@@ -1,6 +1,6 @@
 <template>
   <li :class="{active: active}" :title="title">
-    <span>{{ name }}</span>
+    <em v-if="locked">*</em><span>{{ name }}</span>
   </li>
 </template>
 
@@ -8,6 +8,10 @@
 export default {
   props: {
     active: {
+      type: Boolean,
+      default: false
+    },
+    locked: {
       type: Boolean,
       default: false
     },

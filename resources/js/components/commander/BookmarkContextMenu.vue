@@ -3,9 +3,9 @@
     <li @click="create"><span>New</span></li>
     <li @click="copy"><span>Copy</span></li>
     <li @click="rename"><span>Rename</span></li>
-    <li><span>Lock/Unlock</span></li>
-    <li><span>Close</span></li>
-    <li><span>Close All</span></li>
+    <li @click="lock"><span>Lock/Unlock</span></li>
+    <li @click="close"><span>Close</span></li>
+    <li @click="closeAll"><span>Close All</span></li>
   </ul>
 </template>
 
@@ -14,7 +14,7 @@ import clickOutSide from "../mixins/click-outside.js";
 
 export default {
   directives: {
-    clickOutSide,
+    clickOutSide
   },
   data() {
     return {
@@ -22,29 +22,52 @@ export default {
       left: 10,
       panel: 'left',
       show: false
-    }
+    };
   },
-  emits: ['new', 'rename'],
+  emits: ['close', 'closeAll', 'new', 'rename', 'toggleLock'],
   methods: {
+    /**
+     * Close a bookmark
+     */
+    close() {
+      this.$emit('close', {i: this.index, panel: this.panel});
+      this.show = false;
+    },
+    /**
+     * Close all bookmarks except the current one
+     */
+    closeAll() {
+      this.$emit('closeAll', {i: this.index, panel: this.panel})
+      this.show = false;
+    },
     /**
      * Make a copy of a bookmark in the another tab
      */
     copy() {
-      this.$emit('new', {i: this.index, panel: this.panel === 'left' ? 'right' : 'left'})
+      this.$emit('new', {i: this.index, panel: this.panel === 'left' ? 'right' : 'left'});
+      this.show = false;
     },
     /**
      * Open a new bookmark
      */
     create() {
-      this.$emit('new', {i: this.index, panel: this.panel})
+      this.$emit('new', {i: this.index, panel: this.panel});
+      this.show = false;
+    },
+    /**
+     * Toggle the bookmark "lock" status
+     */
+    lock() {
+      this.$emit('toggleLock', {i: this.index, panel: this.panel});
+      this.show = false;
     },
     /**
      * Rename a bookmark
      */
     rename() {
-      this.$emit('rename', {i: this.index, panel: this.panel})
-      this.show = false
+      this.$emit('rename', {i: this.index, panel: this.panel});
+      this.show = false;
     }
   }
-}
+};
 </script>

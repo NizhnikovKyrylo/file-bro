@@ -6,6 +6,7 @@
           <BookmarkElement
             v-for="(bookmark, i) in panels[panel].bookmarks"
             :active="bookmark.active"
+            :locked="bookmark.locked"
             :name="bookmark.name"
             :title="bookmark.path"
             @contextmenu="bookmarkRightClick($event, i, panel)"
@@ -42,9 +43,11 @@
 
           <div class="commander-file-list-header">
             <div class="commander-file-list-column">
-              files: {{ getBookmarksFiles(panel).filter(i => !i.isDir).length }};
+              .filter(i => i.isDir).length
+              files: {{ typeof getBookmarksFiles(panel)}} {{ Array.isArray(getBookmarksFiles(panel)) }};
+
               &nbsp;&nbsp;&nbsp;&nbsp;
-              folders: {{ getBookmarksFiles(panel).filter(i => i.isDir).length }};
+              folders: {{ typeof getBookmarksFiles(panel) }} {{ Array.isArray(getBookmarksFiles(panel)) }};
             </div>
           </div>
         </div>
@@ -54,8 +57,11 @@
 
   <BookmarkContextMenu
     ref="bookmarkContextMenu"
+    @close="bookmarkRemove"
+    @closeAll="bookmarkRemoveAll"
     @new="bookmarkCreate"
     @rename="bookmarkRenameShowModal"
+    @toggleLock="bookmarkLockToggle"
   />
 
   <InputModal ref="inputModal" @apply="bookmarkRenameHandle"/>
@@ -101,11 +107,41 @@ export default {
      */
     bookmarkCreate(data) {
       // Inactivate the current tab
-      this.panels[data.panel].bookmarks[data.i].active = false
+      for (let i = 0, n = this.panels[data.panel].bookmarks.length; i < n; i++) {
+        this.panels[data.panel].bookmarks[i].active = false;
+      }
       // Create copy of the current bookmark as a new one
-      this.panels[data.panel].bookmarks.push(this.defaultBookmark(this.panels[data.panel].bookmarks[data.i].files, true))
-      // Hide context menu
-      this.$refs.bookmarkContextMenu.show = false;
+      this.panels[data.panel].bookmarks.push(this.defaultBookmark(this.panels[data.panel].bookmarks[data.i].files.list, true));
+    },
+    /**
+     * Toggle the bookmark "locked" status
+     * @param {object} data
+     */
+    bookmarkLockToggle(data) {
+      this.panels[data.panel].bookmarks[data.i].locked = !this.panels[data.panel].bookmarks[data.i].locked;
+    },
+    /**
+     * Remove bookmark
+     * @param data
+     */
+    bookmarkRemove(data) {
+      if (this.panels[data.panel].bookmarks.length > 1) {
+        const activeRemoved = this.panels[data.panel].bookmarks[data.i].active;
+        this.panels[data.panel].bookmarks.splice(data.i, 1);
+        if (activeRemoved) {
+          const index = this.panels[data.panel].bookmarks.length - 1;
+          this.panels[data.panel].shownBookmarkIndex = index;
+          this.panels[data.panel].bookmarks[index].active = true
+        }
+      }
+    },
+    /**
+     *
+     * @param data
+     */
+    bookmarkRemoveAll(data) {
+      this.panels[data.panel].shownBookmarkIndex = 0;
+      this.panels[data.panel].bookmarks = [Object.assign({}, this.panels[data.panel].bookmarks[data.i])];
     },
     /**
      * Set new name to the bookmark
@@ -132,7 +168,7 @@ export default {
      * @param {string} panel
      */
     bookmarkRightClick(e, i, panel) {
-      e.preventDefault()
+      e.preventDefault();
       this.$refs.bookmarkContextMenu.index = i;
       this.$refs.bookmarkContextMenu.panel = panel;
       this.$refs.bookmarkContextMenu.left = e.clientX;
@@ -159,7 +195,7 @@ export default {
           },
           list: list
         }
-      }
+      };
     },
     /**
      * Get files of the active bookmark
@@ -168,11 +204,11 @@ export default {
      */
     getBookmarksFiles(panel) {
       // Get active bookmark index
-      const index = this.panels[panel].shownBookmarkIndex;
+      const index = this.panels[panel]?.shownBookmarkIndex || 0;
       // If there is a bookmark with such index and this bookmark contain files
       return typeof this.panels[panel].bookmarks[index] !== 'undefined' && this.panels[panel].bookmarks[index].hasOwnProperty('files')
-        ?  this.panels[panel].bookmarks[index].files.list
-        : []
+        ? this.panels[panel].bookmarks[index].files.list
+        : [];
     },
     /**
      * Select row click
@@ -199,8 +235,8 @@ export default {
         // Sort files by name and folder type. First go folders then files
         files.sort((a, b) => this.sortFiles(a, b)).reverse().sort((a, b) => this.sortFiles(a, b, 'isDir')).reverse();
 
-        this.panels.left.bookmarks.push(this.defaultBookmark(files, true))
-        this.panels.right.bookmarks.push(this.defaultBookmark(files, true))
+        this.panels.left.bookmarks.push(this.defaultBookmark(files, true));
+        this.panels.right.bookmarks.push(this.defaultBookmark(files, true));
       }
     });
   },
@@ -208,10 +244,10 @@ export default {
     // Change panel with 'tab' press
     document.onkeydown = e => {
       if ('tab' === e.key.toLowerCase()) {
-        e.preventDefault()
+        e.preventDefault();
         this.panels.active = 'left' === this.panels.active ? 'right' : 'left';
       }
-    }
+    };
   }
 };
 </script>

@@ -14,8 +14,8 @@
       - ~~new~~
       - ~~copy~~
       - ~~rename~~
-      - lock/unlock
-      - close
+      - ~~lock/unlock~~
+      - ~~close~~
       - close all
     - click
   - move "down" button
