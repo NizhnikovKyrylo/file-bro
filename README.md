@@ -11,9 +11,9 @@
   - ~~press "tab"~~
   - bookmarks
     - context menu
-      - new
-      - copy
-      - rename
+      - ~~new~~
+      - ~~copy~~
+      - ~~rename~~
       - lock/unlock
       - close
       - close all

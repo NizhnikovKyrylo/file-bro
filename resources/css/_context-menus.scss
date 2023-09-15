@@ -1,0 +1,11 @@
+.bookmark-context-menu {
+  background-color: $white;
+  border: 1px solid $black;
+  position: fixed;
+  top: 125px;
+  z-index: 10;
+
+  li span {display: block; padding: 5px 15px}
+
+  li:hover span {background-color: $gray; cursor: pointer}
+}

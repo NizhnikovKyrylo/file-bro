@@ -3,13 +3,13 @@
     <template v-for="panel in ['left', 'right']">
       <div class="file-browser-commander-panel-wrap" :class="{active: panels.active === panel}">
         <ul class="commander-bookmarks-list">
-          <li
-            v-for="bookmark in panels[panel].bookmarks"
-            :class="{active: bookmark.active}"
+          <BookmarkElement
+            v-for="(bookmark, i) in panels[panel].bookmarks"
+            :active="bookmark.active"
+            :name="bookmark.name"
             :title="bookmark.path"
-          >
-            {{ bookmark.name }}
-          </li>
+            @contextmenu="bookmarkRightClick($event, i, panel)"
+          />
         </ul>
 
         <div class="commander-file-list-wrap">
@@ -51,13 +51,24 @@
       </div>
     </template>
   </div>
+
+  <BookmarkContextMenu
+    ref="bookmarkContextMenu"
+    @new="bookmarkCreate"
+    @rename="bookmarkRenameShowModal"
+  />
+
+  <InputModal ref="inputModal" @apply="bookmarkRenameHandle"/>
 </template>
 
 <script>
+import BookmarkContextMenu from "./commander/BookmarkContextMenu.vue";
+import BookmarkElement from "./commander/BookmarkElement.vue";
+import InputModal from "./default-components/InputModal.vue";
 import ListRow from "./commander/ListRow.vue";
 
 export default {
-  components: {ListRow},
+  components: {InputModal, BookmarkElement, BookmarkContextMenu, ListRow},
   data() {
     return {
       panels: {
@@ -85,9 +96,52 @@ export default {
   },
   methods: {
     /**
+     * Create a bookmark
+     * @param {object} data
+     */
+    bookmarkCreate(data) {
+      // Inactivate the current tab
+      this.panels[data.panel].bookmarks[data.i].active = false
+      // Create copy of the current bookmark as a new one
+      this.panels[data.panel].bookmarks.push(this.defaultBookmark(this.panels[data.panel].bookmarks[data.i].files, true))
+      // Hide context menu
+      this.$refs.bookmarkContextMenu.show = false;
+    },
+    /**
+     * Set new name to the bookmark
+     * @param {object} data
+     */
+    bookmarkRenameHandle(data) {
+      this.panels[data.panel].bookmarks[data.i].name = data.value;
+    },
+    /**
+     * Show Bookmark Rename Modal
+     * @param {object} data
+     */
+    bookmarkRenameShowModal(data) {
+      this.$refs.inputModal.title = 'Rename tab';
+      this.$refs.inputModal.caption = 'New tab name';
+      this.$refs.inputModal.data = data;
+      this.$refs.inputModal.value = this.panels[data.panel].bookmarks[data.i].name;
+      this.$refs.inputModal.show = true;
+    },
+    /**
+     * Call bookmark context menu
+     * @param {event} e
+     * @param {int} i
+     * @param {string} panel
+     */
+    bookmarkRightClick(e, i, panel) {
+      e.preventDefault()
+      this.$refs.bookmarkContextMenu.index = i;
+      this.$refs.bookmarkContextMenu.panel = panel;
+      this.$refs.bookmarkContextMenu.left = e.clientX;
+      this.$refs.bookmarkContextMenu.show = true;
+    },
+    /**
      * Generate a bookmark body
-     * @param list
-     * @param active
+     * @param {Array} list
+     * @param {boolean} active
      * @returns {object}
      */
     defaultBookmark(list = [], active = false) {
@@ -109,8 +163,8 @@ export default {
     },
     /**
      * Get files of the active bookmark
-     * @param panel
-     * @returns {[]|*[]}
+     * @param {string} panel
+     * @returns {Array}
      */
     getBookmarksFiles(panel) {
       // Get active bookmark index
@@ -122,7 +176,7 @@ export default {
     },
     /**
      * Select row click
-     * @param data
+     * @param {object} data
      */
     rowSelected(data) {
       // Set active panel

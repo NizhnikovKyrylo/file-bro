@@ -1,0 +1,24 @@
+<template>
+  <li :class="{active: active}" :title="title">
+    <span>{{ name }}</span>
+  </li>
+</template>
+
+<script>
+export default {
+  props: {
+    active: {
+      type: Boolean,
+      default: false
+    },
+    name: {
+      type: String,
+      required: true
+    },
+    title: {
+      type: String,
+      required: true
+    }
+  }
+}
+</script>

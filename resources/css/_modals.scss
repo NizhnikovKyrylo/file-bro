@@ -1,0 +1,78 @@
+.input-modal-wrap {
+  background-color: $white;
+  border: 1px solid $gray;
+  border-radius: 10px;
+  left: 50%;
+  overflow: hidden;
+  position: fixed;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 320px;
+  width: 50%;
+  z-index: 1000;
+
+  .input-modal-title {
+    background-color: $dark;
+    color: $white;
+    padding: 10px;
+    position: relative;
+    text-align: center;
+
+    > span {font-size: 16px; font-weight: bold}
+  }
+
+  .input-modal-close {
+    align-items: center;
+    border: 1px solid $gray;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    height: 25px;
+    justify-content: center;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 25px;
+
+    .file-browser-icon {background-color: $white}
+
+    &:hover {
+      background-color: $gray;
+
+      .file-browser-icon {background-color: $black}
+    }
+  }
+
+  .input-modal-body {padding: 15px}
+
+  .input-modal-caption {font-size: 14px}
+
+  .input-modal-text {
+    margin: 5px 0;
+    width: 100%;
+
+    input {
+      border-radius: 5px;
+      padding: 8px;
+      width: 100%;
+    }
+  }
+
+  .input-modal-controls {
+    align-items: center;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+
+    button {
+      background-color: $gray;
+      border: 1px solid $dark;
+      border-radius: 5px;
+      cursor: pointer;
+      padding: 8px 16px;
+
+      &:hover {filter: brightness(1.1)}
+    }
+  }
+}
