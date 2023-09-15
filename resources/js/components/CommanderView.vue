@@ -106,12 +106,13 @@ export default {
      * @param {object} data
      */
     bookmarkCreate(data) {
+      const bookmarks = this.panels[data.panel].bookmarks
       // Inactivate the current tab
-      for (let i = 0, n = this.panels[data.panel].bookmarks.length; i < n; i++) {
-        this.panels[data.panel].bookmarks[i].active = false;
+      for (let i = 0, n = bookmarks.length; i < n; i++) {
+        bookmarks[i].active = false;
       }
       // Create copy of the current bookmark as a new one
-      this.panels[data.panel].bookmarks.push(this.defaultBookmark(this.panels[data.panel].bookmarks[data.i].files.list, true));
+      bookmarks.push(this.defaultBookmark(bookmarks[data.i].files.list, true));
     },
     /**
      * Toggle the bookmark "locked" status
@@ -219,10 +220,9 @@ export default {
     getBookmarksFiles(panel) {
       // Get active bookmark index
       const index = this.panels[panel]?.shownBookmarkIndex || 0;
+      const bookmarks = this.panels[panel].bookmarks;
       // If there is a bookmark with such index and this bookmark contain files
-      return typeof this.panels[panel].bookmarks[index] !== 'undefined' && this.panels[panel].bookmarks[index].hasOwnProperty('files')
-        ? this.panels[panel].bookmarks[index].files.list
-        : [];
+      return typeof bookmarks[index] !== 'undefined' && bookmarks[index].hasOwnProperty('files') ? bookmarks[index].files.list : [];
     },
     /**
      * Select row click
