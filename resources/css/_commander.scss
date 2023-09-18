@@ -42,6 +42,11 @@
     border-left: 1px solid transparent;
     border-right: 1px solid transparent;
 
+    .commander-file-list-content {
+      max-height: 70vh;
+      overflow: auto;
+    }
+
     .commander-file-list-header, .commander-file-list-row {
       align-items: center;
       background-color: $white;

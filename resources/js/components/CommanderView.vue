@@ -30,7 +30,7 @@
             </div>
           </div>
 
-          <template v-if="panels[panel].bookmarks.length">
+          <div class="commander-file-list-content" v-if="panels[panel].bookmarks.length">
             <ListRow
               v-for="(file, i) in getBookmarksFiles(panel)"
               :file="file"
@@ -39,7 +39,7 @@
               :panel="panel"
               @selectRow="rowSelected"
             />
-          </template>
+          </div>
 
           <div class="commander-file-list-header">
             <div class="commander-file-list-column">
@@ -213,16 +213,85 @@ export default {
       };
     },
     /**
+     * Retrieve the active bookmark of the active panel
+     * @param {string} panel
+     * @returns {object}
+     */
+    getActiveBookmark (panel) {
+      const index = this.panels[panel]?.shownBookmarkIndex || 0;
+      const bookmarks = this.panels[panel].bookmarks;
+
+      return typeof bookmarks[index] !== 'undefined' ? bookmarks[index] : {};
+    },
+    /**
      * Get files of the active bookmark
      * @param {string} panel
      * @returns {Array}
      */
     getBookmarksFiles(panel) {
-      // Get active bookmark index
-      const index = this.panels[panel]?.shownBookmarkIndex || 0;
-      const bookmarks = this.panels[panel].bookmarks;
+      // Get active bookmark
+      const bookmark = this.getActiveBookmark(panel);
       // If there is a bookmark with such index and this bookmark contain files
-      return typeof bookmarks[index] !== 'undefined' && bookmarks[index].hasOwnProperty('files') ? bookmarks[index].files.list : [];
+      return bookmark.hasOwnProperty('files') ? bookmark.files.list : [];
+    },
+    /**
+     * Press "pageDown" handler
+     * @param {object} bookmark
+     */
+    jumpDown(bookmark) {
+      // Increase position value for 20
+      let position = bookmark.files.selected + 20;
+      // Check the position is lower than the file number
+      position > bookmark.files.list.length - 1 && (position = bookmark.files.list.length - 1);
+      // Move to the position below, Scroll to element
+      this.scrollToElement(bookmark.files.selected = position);
+    },
+    /**
+     * Press "pageUp" handler
+     * @param {object} bookmark
+     */
+    jumpUp(bookmark) {
+      // Decrease position value for 20
+      let position = bookmark.files.selected - 20;
+      // Check the position is greater than 0
+      position < 0 && (position = 0);
+      // Move to the position below, Scroll to element
+      this.scrollToElement(bookmark.files.selected = position);
+    },
+    /**
+     * Press "home" handler
+     * @param {object} bookmark
+     */
+    moveToBegin(bookmark) {
+      this.scrollToElement(bookmark.files.selected = 0)
+    },
+    /**
+     * Press "end" handler
+     * @param {object} bookmark
+     */
+    moveToEnd(bookmark) {
+      const files = bookmark.files.list.length - 1;
+      this.scrollToElement(bookmark.files.selected = files > 0 ? files : 0)
+    },
+    /**
+     * Press "Arrow down" handler
+     * @param {object} bookmark
+     */
+    moveDown(bookmark) {
+      // If element index is less than files number, move the selection below
+      bookmark.files.list.length - 1 > bookmark.files.selected && bookmark.files.selected++;
+      // Scroll to element
+      this.scrollToElement(bookmark.files.selected)
+    },
+    /**
+     * Press "Arrow up" handler
+     * @param {object} bookmark
+     */
+    moveUp(bookmark) {
+      // If element index is greater than 0, move the selection upper
+      bookmark.files.selected > 0 && bookmark.files.selected--;
+      // Scroll to element
+      this.scrollToElement(bookmark.files.selected)
     },
     /**
      * Select row click
@@ -239,6 +308,9 @@ export default {
           break;
         }
       }
+    },
+    scrollToElement(i) {
+      document.querySelectorAll('.file-browser-commander-panel-wrap.active .commander-file-list-content .commander-file-list-row')[i].scrollIntoView(true)
     }
   },
   beforeMount() {
@@ -262,6 +334,33 @@ export default {
         this.panels.active = 'left' === this.panels.active ? 'right' : 'left';
       }
     };
+
+    document.onkeyup = e => {
+      e.preventDefault();
+      const key = e.key.toLowerCase();
+
+      switch (key) {
+        case 'arrowdown':
+          this.moveDown(this.getActiveBookmark(this.panels.active))
+          break;
+        case 'arrowup':
+          this.moveUp(this.getActiveBookmark(this.panels.active))
+          break;
+        case 'end':
+          this.moveToEnd(this.getActiveBookmark(this.panels.active));
+          break;
+        case 'home':
+          this.moveToBegin(this.getActiveBookmark(this.panels.active));
+          break;
+        case 'pagedown':
+          this.jumpDown(this.getActiveBookmark(this.panels.active))
+          break;
+        case 'pageup':
+          this.jumpUp(this.getActiveBookmark(this.panels.active))
+          break;
+      }
+      console.log(key);
+    }
   }
 };
 </script>

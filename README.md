@@ -10,29 +10,29 @@
   - ~~click panel to select row~~
   - ~~press "tab"~~
   - bookmarks
-    - context menu
+    - ~~context menu~~
       - ~~new~~
       - ~~copy~~
       - ~~rename~~
       - ~~lock/unlock~~
       - ~~close~~
-      - close all
+      - ~~close all~~
     - click
-  - move "down" button
-  - move "up" button
-  - pageDown
-  - pageUp
-  - end
-  - home
+  - ~~move "down" button~~
+  - ~~move "up" button~~
+  - ~~pageDown~~
+  - ~~pageUp~~
+  - ~~end~~
+  - ~~home~~
   - insert
   - del
   - insert with "space" + get size
   - get file properties via alt+enter
   - go into folder
     - enter
-    - right button
+    - -> button
   - go upper folder
-    - press "left" button
+    - press <- button
     - press "backspace" button
   - mouse double-click
     - folder
