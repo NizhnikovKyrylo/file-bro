@@ -35,6 +35,7 @@
               v-for="(file, i) in getBookmarksFiles(panel)"
               :file="file"
               :index="i"
+              :inserted="panels[panel].bookmarks[panels[panel].shownBookmarkIndex].files.inserted.indexOf(i) >= 0"
               :selected="panels.active === panel && i === panels[panel].bookmarks[panels[panel].shownBookmarkIndex].files.selected"
               :panel="panel"
               @selectRow="rowSelected"
@@ -64,7 +65,19 @@
     @toggleLock="bookmarkLockToggle"
   />
 
-  <InputModal ref="inputModal" @apply="bookmarkRenameHandle"/>
+  <InputModal
+    ref="renameModal"
+    caption="New tab name"
+    title="Rename tab"
+    @apply="bookmarkRenameHandler"
+  />
+
+  <InputModal
+    ref="deleteModal"
+    title="Remove file/directory"
+    :hideInput="true"
+    @apply="fileRemoveHandler"
+  />
 </template>
 
 <script>
@@ -106,7 +119,7 @@ export default {
      * @param {object} data
      */
     bookmarkCreate(data) {
-      const bookmarks = this.panels[data.panel].bookmarks
+      const bookmarks = this.panels[data.panel].bookmarks;
       // Inactivate the current tab
       for (let i = 0, n = bookmarks.length; i < n; i++) {
         bookmarks[i].active = false;
@@ -162,7 +175,7 @@ export default {
      * Set new name to the bookmark
      * @param {object} data
      */
-    bookmarkRenameHandle(data) {
+    bookmarkRenameHandler(data) {
       this.panels[data.panel].bookmarks[data.i].name = data.value;
     },
     /**
@@ -170,11 +183,9 @@ export default {
      * @param {object} data
      */
     bookmarkRenameShowModal(data) {
-      this.$refs.inputModal.title = 'Rename tab';
-      this.$refs.inputModal.caption = 'New tab name';
-      this.$refs.inputModal.data = data;
-      this.$refs.inputModal.value = this.panels[data.panel].bookmarks[data.i].name;
-      this.$refs.inputModal.show = true;
+      this.$refs.renameModal.data = data;
+      this.$refs.renameModal.value = this.panels[data.panel].bookmarks[data.i].name;
+      this.$refs.renameModal.show = true;
     },
     /**
      * Call bookmark context menu
@@ -212,12 +223,15 @@ export default {
         }
       };
     },
+    fileRemoveHandler(data) {
+      console.log(data);
+    },
     /**
      * Retrieve the active bookmark of the active panel
      * @param {string} panel
      * @returns {object}
      */
-    getActiveBookmark (panel) {
+    getActiveBookmark(panel) {
       const index = this.panels[panel]?.shownBookmarkIndex || 0;
       const bookmarks = this.panels[panel].bookmarks;
 
@@ -235,8 +249,23 @@ export default {
       return bookmark.hasOwnProperty('files') ? bookmark.files.list : [];
     },
     /**
+     * Insert row
+     * @param bookmark
+     * @returns {this}
+     */
+    insertRow(bookmark) {
+      const index = bookmark.files.inserted.indexOf(bookmark.files.selected)
+      if (index >= 0) {
+        bookmark.files.inserted.splice(index, 1)
+      } else {
+        bookmark.files.inserted.push(bookmark.files.selected);
+      }
+      return this;
+    },
+    /**
      * Press "pageDown" handler
      * @param {object} bookmark
+     * @returns {this}
      */
     jumpDown(bookmark) {
       // Increase position value for 20
@@ -245,10 +274,12 @@ export default {
       position > bookmark.files.list.length - 1 && (position = bookmark.files.list.length - 1);
       // Move to the position below, Scroll to element
       this.scrollToElement(bookmark.files.selected = position);
+      return this;
     },
     /**
      * Press "pageUp" handler
      * @param {object} bookmark
+     * @returns {this}
      */
     jumpUp(bookmark) {
       // Decrease position value for 20
@@ -257,41 +288,50 @@ export default {
       position < 0 && (position = 0);
       // Move to the position below, Scroll to element
       this.scrollToElement(bookmark.files.selected = position);
+      return this;
     },
     /**
      * Press "home" handler
      * @param {object} bookmark
+     * @returns {this}
      */
     moveToBegin(bookmark) {
-      this.scrollToElement(bookmark.files.selected = 0)
+      this.scrollToElement(bookmark.files.selected = 0);
+      return this;
     },
     /**
      * Press "end" handler
      * @param {object} bookmark
+     * @returns {this}
      */
     moveToEnd(bookmark) {
       const files = bookmark.files.list.length - 1;
-      this.scrollToElement(bookmark.files.selected = files > 0 ? files : 0)
+      this.scrollToElement(bookmark.files.selected = files > 0 ? files : 0);
+      return this;
     },
     /**
      * Press "Arrow down" handler
      * @param {object} bookmark
+     * @returns {this}
      */
     moveDown(bookmark) {
       // If element index is less than files number, move the selection below
       bookmark.files.list.length - 1 > bookmark.files.selected && bookmark.files.selected++;
       // Scroll to element
-      this.scrollToElement(bookmark.files.selected)
+      this.scrollToElement(bookmark.files.selected);
+      return this;
     },
     /**
      * Press "Arrow up" handler
      * @param {object} bookmark
+     * @returns {this}
      */
     moveUp(bookmark) {
       // If element index is greater than 0, move the selection upper
       bookmark.files.selected > 0 && bookmark.files.selected--;
       // Scroll to element
-      this.scrollToElement(bookmark.files.selected)
+      this.scrollToElement(bookmark.files.selected);
+      return this;
     },
     /**
      * Select row click
@@ -309,8 +349,15 @@ export default {
         }
       }
     },
+    /**
+     * Move focus to the selected row
+     * @param i
+     */
     scrollToElement(i) {
-      document.querySelectorAll('.file-browser-commander-panel-wrap.active .commander-file-list-content .commander-file-list-row')[i].scrollIntoView(true)
+      const nodes = document.querySelectorAll('.file-browser-commander-panel-wrap.active .commander-file-list-content .commander-file-list-row');
+      let pos = i > 2 ? i - 2 : 0;
+
+      nodes[pos].scrollIntoView(true);
     }
   },
   beforeMount() {
@@ -338,13 +385,15 @@ export default {
     document.onkeyup = e => {
       e.preventDefault();
       const key = e.key.toLowerCase();
-
+      const bookmark = this.getActiveBookmark(this.panels.active);
       switch (key) {
         case 'arrowdown':
-          this.moveDown(this.getActiveBookmark(this.panels.active))
+          e.shiftKey && this.insertRow(bookmark);
+          this.moveDown(bookmark);
           break;
         case 'arrowup':
-          this.moveUp(this.getActiveBookmark(this.panels.active))
+          e.shiftKey && this.insertRow(bookmark);
+          this.moveUp(this.getActiveBookmark(this.panels.active));
           break;
         case 'end':
           this.moveToEnd(this.getActiveBookmark(this.panels.active));
@@ -352,15 +401,19 @@ export default {
         case 'home':
           this.moveToBegin(this.getActiveBookmark(this.panels.active));
           break;
+        case 'insert':
+          this.insertRow(bookmark).moveDown(bookmark);
+          break;
         case 'pagedown':
-          this.jumpDown(this.getActiveBookmark(this.panels.active))
+          e.shiftKey && this.insertRow(bookmark)
+          this.jumpDown(this.getActiveBookmark(this.panels.active));
           break;
         case 'pageup':
-          this.jumpUp(this.getActiveBookmark(this.panels.active))
+          this.jumpUp(this.getActiveBookmark(this.panels.active));
           break;
       }
       console.log(key);
-    }
+    };
   }
 };
 </script>

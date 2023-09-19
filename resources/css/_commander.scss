@@ -81,6 +81,8 @@
 
       &.selected {background-color: $violet; color: $white}
 
+      &.inserted {color: $red}
+
       .commander-file-list-column {
         .file-browser-icon {
           position: absolute;

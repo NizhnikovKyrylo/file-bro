@@ -24,7 +24,14 @@
   - ~~pageUp~~
   - ~~end~~
   - ~~home~~
-  - insert
+  - ~~insert~~
+  - "Shift" actions
+    - ~~move up~~
+    - ~~move down~~
+    - page up
+    - page down
+    - home
+    - end
   - del
   - insert with "space" + get size
   - get file properties via alt+enter

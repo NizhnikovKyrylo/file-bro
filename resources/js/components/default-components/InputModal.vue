@@ -9,7 +9,7 @@
     <div class="input-modal-body">
       <div class="input-modal-caption"><span>{{ caption }}:</span></div>
       <div class="input-modal-text">
-        <input autocomplete="off" required v-model="value" @keyup.enter="apply">
+        <input autocomplete="off" :required="!hideInput" v-model="value" @keyup.enter="apply" v-if="!hideInput">
       </div>
       <div class="input-modal-controls">
         <button name="yes" type="button" @click="apply"><span>OK</span></button>
@@ -23,14 +23,26 @@
 export default {
   data() {
     return {
-      caption: null,
       data: {},
       show: false,
-      title: '',
       value: ''
     };
   },
   emits: ['apply'],
+  props: {
+    caption: {
+      type: String,
+      default: ''
+    },
+    title: {
+      type: String,
+      default: ''
+    },
+    hideInput: {
+      type: Boolean,
+      default: false
+    }
+  },
   methods: {
     /**
      * Press OK button

@@ -1,5 +1,5 @@
 <template>
-  <div class="commander-file-list-row" :class="{selected: selected}" @click="selectRow">
+  <div class="commander-file-list-row" :class="{inserted: inserted, selected: selected}" @click="selectRow">
     <div class="commander-file-list-column" :title="`${file.filename}.${file.ext}`">
       <i :class="`file-browser-icon ${ fileIcon(file) }`"></i>
       <span>{{ file.filename }}</span>
@@ -27,6 +27,10 @@ export default {
     index: {
       type: Number,
       required: true
+    },
+    inserted: {
+      type: Boolean,
+      default: false
     },
     panel: {
       type: String,
