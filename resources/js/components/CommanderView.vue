@@ -136,7 +136,7 @@ export default {
     },
     /**
      * Remove bookmark
-     * @param data
+     * @param {object} data
      */
     bookmarkRemove(data) {
       const bookmarks = this.panels[data.panel].bookmarks;
@@ -250,87 +250,96 @@ export default {
     },
     /**
      * Insert row
-     * @param bookmark
+     * @param {object} bookmark
+     * @param {int} i
      * @returns {this}
      */
-    insertRow(bookmark) {
-      const index = bookmark.files.inserted.indexOf(bookmark.files.selected)
+    insertRow(bookmark, i = null) {
+      null === i && (i = bookmark.files.selected);
+      const index = bookmark.files.inserted.indexOf(i);
       if (index >= 0) {
-        bookmark.files.inserted.splice(index, 1)
+        bookmark.files.inserted.splice(index, 1);
       } else {
-        bookmark.files.inserted.push(bookmark.files.selected);
+        bookmark.files.inserted.push(i);
       }
+
       return this;
     },
     /**
      * Press "pageDown" handler
      * @param {object} bookmark
+     * @param {event} e
      * @returns {this}
      */
-    jumpDown(bookmark) {
+    jumpDown(bookmark, e) {
       // Increase position value for 20
       let position = bookmark.files.selected + 20;
       // Check the position is lower than the file number
       position > bookmark.files.list.length - 1 && (position = bookmark.files.list.length - 1);
       // Move to the position below, Scroll to element
-      this.scrollToElement(bookmark.files.selected = position);
+      this.scrollToElement(bookmark.files.selected = position, e);
       return this;
     },
     /**
      * Press "pageUp" handler
      * @param {object} bookmark
+     * @param {event} e
      * @returns {this}
      */
-    jumpUp(bookmark) {
+    jumpUp(bookmark, e) {
       // Decrease position value for 20
       let position = bookmark.files.selected - 20;
       // Check the position is greater than 0
       position < 0 && (position = 0);
       // Move to the position below, Scroll to element
-      this.scrollToElement(bookmark.files.selected = position);
+      this.scrollToElement(bookmark.files.selected = position, e);
       return this;
     },
     /**
      * Press "home" handler
      * @param {object} bookmark
+     * @param {event} e
      * @returns {this}
      */
-    moveToBegin(bookmark) {
-      this.scrollToElement(bookmark.files.selected = 0);
+    moveToBegin(bookmark, e) {
+      this.scrollToElement(bookmark.files.selected = 0, e);
       return this;
     },
     /**
      * Press "end" handler
      * @param {object} bookmark
+     * @param {event} e
      * @returns {this}
      */
-    moveToEnd(bookmark) {
+    moveToEnd(bookmark, e) {
       const files = bookmark.files.list.length - 1;
-      this.scrollToElement(bookmark.files.selected = files > 0 ? files : 0);
+      this.scrollToElement(bookmark.files.selected = files > 0 ? files : 0, e);
       return this;
     },
     /**
      * Press "Arrow down" handler
      * @param {object} bookmark
+     * @param {event} e
      * @returns {this}
      */
-    moveDown(bookmark) {
+    moveDown(bookmark, e) {
       // If element index is less than files number, move the selection below
       bookmark.files.list.length - 1 > bookmark.files.selected && bookmark.files.selected++;
       // Scroll to element
-      this.scrollToElement(bookmark.files.selected);
+      this.scrollToElement(bookmark.files.selected, e);
       return this;
     },
     /**
      * Press "Arrow up" handler
      * @param {object} bookmark
+     * @param {event} e
      * @returns {this}
      */
-    moveUp(bookmark) {
+    moveUp(bookmark, e) {
       // If element index is greater than 0, move the selection upper
       bookmark.files.selected > 0 && bookmark.files.selected--;
       // Scroll to element
-      this.scrollToElement(bookmark.files.selected);
+      this.scrollToElement(bookmark.files.selected, e);
       return this;
     },
     /**
@@ -351,13 +360,23 @@ export default {
     },
     /**
      * Move focus to the selected row
-     * @param i
+     * @param {int} i
+     * @param {event} e
      */
-    scrollToElement(i) {
-      const nodes = document.querySelectorAll('.file-browser-commander-panel-wrap.active .commander-file-list-content .commander-file-list-row');
-      let pos = i > 2 ? i - 2 : 0;
+    scrollToElement(i, e) {
+      const box = e.target.querySelector('.file-browser-commander-panel-wrap.active .commander-file-list-content');
+      const elem = box.querySelectorAll('.commander-file-list-row')[i];
+      const current = i * elem.offsetHeight - (box.offsetHeight - 60);
+      const upPoint = box.scrollTop - box.offsetHeight + 150;
 
-      nodes[pos].scrollIntoView(true);
+      current > box.scrollTop && elem.scrollIntoView(true);
+
+      current < upPoint
+      && null !== elem.previousSibling.previousSibling
+      && typeof elem.previousSibling.previousSibling.scrollIntoView !== 'undefined'
+      && elem.previousSibling.previousSibling.scrollIntoView(true);
+
+      current < upPoint && i === 0 && elem.scrollIntoView(true);
     }
   },
   beforeMount() {
@@ -376,43 +395,58 @@ export default {
   mounted() {
     // Change panel with 'tab' press
     document.onkeydown = e => {
-      if ('tab' === e.key.toLowerCase()) {
+      const key = e.key.toLowerCase();
+      if (['tab', 'arrowdown', 'arrowup', 'end', 'home', 'pagedown', 'pageup'].indexOf(key) >= 0) {
         e.preventDefault();
-        this.panels.active = 'left' === this.panels.active ? 'right' : 'left';
+
+        const bookmark = this.getActiveBookmark(this.panels.active);
+
+        switch (key) {
+          case 'arrowdown':
+            e.shiftKey && this.insertRow(bookmark);
+            this.moveDown(bookmark, e);
+            break;
+          case 'arrowup':
+            e.shiftKey && this.insertRow(bookmark);
+            this.moveUp(bookmark, e);
+            break;
+          case 'end':
+            this.moveToEnd(bookmark, e);
+            break;
+          case 'home':
+            this.moveToBegin(bookmark, e);
+            break;
+          case 'pagedown':
+            if (e.shiftKey) {
+              for (let i = bookmark.files.selected, n = bookmark.files.selected + 20; i < n; i++) {
+                i < bookmark.files.list.length && this.insertRow(bookmark, i)
+              }
+            }
+            this.jumpDown(bookmark, e);
+            break;
+          case 'pageup':
+            if (e.shiftKey) {
+              for (let i = bookmark.files.selected, n = bookmark.files.selected - 20; i > n; i--) {
+                i >= 0 && this.insertRow(bookmark, i);
+              }
+            }
+            this.jumpUp(bookmark, e);
+            break;
+          case 'tab':
+            this.panels.active = 'left' === this.panels.active ? 'right' : 'left';
+            break;
+        }
       }
     };
 
     document.onkeyup = e => {
-      e.preventDefault();
       const key = e.key.toLowerCase();
       const bookmark = this.getActiveBookmark(this.panels.active);
       switch (key) {
-        case 'arrowdown':
-          e.shiftKey && this.insertRow(bookmark);
-          this.moveDown(bookmark);
-          break;
-        case 'arrowup':
-          e.shiftKey && this.insertRow(bookmark);
-          this.moveUp(this.getActiveBookmark(this.panels.active));
-          break;
-        case 'end':
-          this.moveToEnd(this.getActiveBookmark(this.panels.active));
-          break;
-        case 'home':
-          this.moveToBegin(this.getActiveBookmark(this.panels.active));
-          break;
         case 'insert':
-          this.insertRow(bookmark).moveDown(bookmark);
-          break;
-        case 'pagedown':
-          e.shiftKey && this.insertRow(bookmark)
-          this.jumpDown(this.getActiveBookmark(this.panels.active));
-          break;
-        case 'pageup':
-          this.jumpUp(this.getActiveBookmark(this.panels.active));
+          this.insertRow(bookmark).moveDown(bookmark, e);
           break;
       }
-      console.log(key);
     };
   }
 };

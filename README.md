@@ -28,8 +28,8 @@
   - "Shift" actions
     - ~~move up~~
     - ~~move down~~
-    - page up
-    - page down
+    - ~~page up~~
+    - ~~page down~~
     - home
     - end
   - del
