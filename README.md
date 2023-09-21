@@ -25,13 +25,7 @@
   - ~~end~~
   - ~~home~~
   - ~~insert~~
-  - "Shift" actions
-    - ~~move up~~
-    - ~~move down~~
-    - ~~page up~~
-    - ~~page down~~
-    - home
-    - end
+  - ~~"Shift" actions~~
   - del
   - insert with "space" + get size
   - get file properties via alt+enter

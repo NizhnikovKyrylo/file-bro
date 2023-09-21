@@ -396,9 +396,10 @@ export default {
     // Change panel with 'tab' press
     document.onkeydown = e => {
       const key = e.key.toLowerCase();
-      if (['tab', 'arrowdown', 'arrowup', 'end', 'home', 'pagedown', 'pageup'].indexOf(key) >= 0) {
-        e.preventDefault();
 
+      console.log(key);
+      if (['tab', 'arrowdown', 'arrowup', 'end', 'home', 'pagedown', 'pageup', 'delete'].indexOf(key) >= 0) {
+        e.preventDefault();
         const bookmark = this.getActiveBookmark(this.panels.active);
 
         switch (key) {
@@ -410,10 +411,25 @@ export default {
             e.shiftKey && this.insertRow(bookmark);
             this.moveUp(bookmark, e);
             break;
+          case 'delete':
+            let remove = bookmark.files.inserted.length ? bookmark.files.inserted : [bookmark.files.selected];
+
+            console.log(remove);
+            break;
           case 'end':
+            if (e.shiftKey) {
+              for (let i = bookmark.files.selected, n = bookmark.files.list.length; i < n; i++) {
+                this.insertRow(bookmark, i);
+              }
+            }
             this.moveToEnd(bookmark, e);
             break;
           case 'home':
+            if (e.shiftKey) {
+              for (let i = bookmark.files.selected; i > 0; i--) {
+                this.insertRow(bookmark, i);
+              }
+            }
             this.moveToBegin(bookmark, e);
             break;
           case 'pagedown':
