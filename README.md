@@ -26,9 +26,8 @@
   - ~~home~~
   - ~~insert~~
   - ~~"Shift" actions~~
-  - Shift + click
   - ~~del~~
-  - insert with "space" + get size
+  - ~~insert with "space" + get size~~
   - get file properties via alt+enter
   - go into folder
     - enter

@@ -50,8 +50,8 @@ export default {
     /**
      * Click row event
      */
-    selectRow() {
-      this.$emit('selectRow', {i: this.index, panel: this.panel})
+    selectRow(e) {
+      this.$emit('selectRow', {i: this.index, panel: this.panel, shift: e.shiftKey})
     }
   }
 }

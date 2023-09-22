@@ -376,8 +376,22 @@ export default {
       // Set active panel
       this.panels.active = data.panel;
       const bookmarks = this.panels[this.panels.active].bookmarks;
+
       for (let i = 0, n = bookmarks.length; i < n; i++) {
         if (bookmarks[i].active) {
+          // Reset inserted items
+          bookmarks[i].files.inserted = [];
+          // Shift key was pressed
+          if (data.shift) {
+            // Selected row index
+            const selected = bookmarks[i].files.selected;
+            // Check selection direction
+            const selection = bookmarks[i].files.selected > data.i
+              ? {max: selected, min: data.i} // Selection direction up
+              : {max: data.i, min: selected}; // Selection direction down
+            // Highlight the inserted rows
+            bookmarks[i].files.inserted = [...Array(selection.max - selection.min + 1).keys()].map(i => i + selection.min);
+          }
           // Set selected file position
           bookmarks[i].files.selected = data.i;
           break;
@@ -390,13 +404,17 @@ export default {
      * @param {event} e
      */
     scrollToElement(i, e) {
+      // File list container
       const box = e.target.querySelector('.file-browser-commander-panel-wrap.active .commander-file-list-content');
+      // Target row
       const elem = box.querySelectorAll('.commander-file-list-row')[i];
+      // Figure out current element position
       const current = i * elem.offsetHeight - (box.offsetHeight - 60);
+      // Moving up point
       const upPoint = box.scrollTop - box.offsetHeight + 150;
-
+      // Moving down event
       current > box.scrollTop && elem.scrollIntoView(true);
-
+      // Moving up event
       current < upPoint
       && null !== elem.previousSibling.previousSibling
       && typeof elem.previousSibling.previousSibling.scrollIntoView !== 'undefined'
@@ -424,19 +442,34 @@ export default {
       const key = e.key.toLowerCase();
 
       console.log(key);
-      if (['tab', 'arrowdown', 'arrowup', 'end', 'home', 'pagedown', 'pageup', 'delete'].indexOf(key) >= 0) {
+      if (['tab', 'arrowdown', 'arrowup', 'end', 'home', 'pagedown', 'pageup', 'delete', ' '].indexOf(key) >= 0) {
         e.preventDefault();
         const bookmark = this.getActiveBookmark(this.panels.active);
 
         switch (key) {
+          // Press space to highlight or remove insertion, and get size if item is a folder
+          case ' ':
+            if (!this.$refs.bookmarkContextMenu.show && !this.$refs.deleteModal.show && !this.$refs.renameModal.show) {
+              this.insertRow(bookmark);
+              const file = bookmark.files.list[bookmark.files.selected];
+              // Get folder size
+              file.isDir && this.request(Object.assign(
+                this.routes.size,
+                {data: {path: file.path + file.basename}}
+              )).then(response => 200 === response.status && (file.size = response.data.size))
+            }
+            break;
+          // Move down with "arrow down" press
           case 'arrowdown':
             e.shiftKey && this.insertRow(bookmark);
             this.moveDown(bookmark, e);
             break;
+          // Move up with "arrow up" press
           case 'arrowup':
             e.shiftKey && this.insertRow(bookmark);
             this.moveUp(bookmark, e);
             break;
+          // Move to the very end of the file list
           case 'end':
             if (e.shiftKey) {
               for (let i = bookmark.files.selected, n = bookmark.files.list.length; i < n; i++) {
@@ -445,6 +478,7 @@ export default {
             }
             this.moveToEnd(bookmark, e);
             break;
+          // Move to the very beginning of the file list
           case 'home':
             if (e.shiftKey) {
               for (let i = bookmark.files.selected; i > 0; i--) {
@@ -453,6 +487,7 @@ export default {
             }
             this.moveToBegin(bookmark, e);
             break;
+          // Move down with "page down" press
           case 'pagedown':
             if (e.shiftKey) {
               for (let i = bookmark.files.selected, n = bookmark.files.selected + 20; i < n; i++) {
@@ -461,6 +496,7 @@ export default {
             }
             this.jumpDown(bookmark, e);
             break;
+          // Move up with "page up" press
           case 'pageup':
             if (e.shiftKey) {
               for (let i = bookmark.files.selected, n = bookmark.files.selected - 20; i > n; i--) {
@@ -469,6 +505,7 @@ export default {
             }
             this.jumpUp(bookmark, e);
             break;
+          // Switch panel with "tab" pressing
           case 'tab':
             this.panels.active = 'left' === this.panels.active ? 'right' : 'left';
             break;
@@ -480,6 +517,7 @@ export default {
       const key = e.key.toLowerCase();
       const bookmark = this.getActiveBookmark(this.panels.active);
       switch (key) {
+        // Remove file or folder with "delete" key
         case 'delete':
           const items = bookmark.files.inserted.length ? bookmark.files.inserted : [bookmark.files.selected];
           const caption = items.length > 1
@@ -492,6 +530,7 @@ export default {
           this.$refs.deleteModal.caption = `Do you really want to remove ${caption}`;
           this.$refs.deleteModal.show = true;
           break;
+        // Highlight inserted row
         case 'insert':
           this.insertRow(bookmark).moveDown(bookmark, e);
           break;

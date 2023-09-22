@@ -76,8 +76,9 @@
     }
 
     .commander-file-list-row {
-      &:nth-child(even) {background-color: $gray}
+      user-select: none;
 
+      &:nth-child(even) {background-color: $gray}
 
       &.selected {background-color: $violet; color: $white}
 
