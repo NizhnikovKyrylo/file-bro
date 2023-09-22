@@ -7,12 +7,12 @@
       </div>
     </div>
     <div class="input-modal-body">
-      <div class="input-modal-caption"><span>{{ caption }}:</span></div>
+      <div class="input-modal-caption"><span v-html="caption"></span></div>
       <div class="input-modal-text">
         <input autocomplete="off" :required="!hideInput" v-model="value" @keyup.enter="apply" v-if="!hideInput">
       </div>
       <div class="input-modal-controls">
-        <button name="yes" type="button" @click="apply"><span>OK</span></button>
+        <button name="yes" type="button" @click="apply" @keyup.enter="apply"><span>OK</span></button>
         <button name="no" type="button" @click="close"><span>Cancel</span></button>
       </div>
     </div>
@@ -23,6 +23,7 @@
 export default {
   data() {
     return {
+      caption: '',
       data: {},
       show: false,
       value: ''
@@ -30,10 +31,6 @@ export default {
   },
   emits: ['apply'],
   props: {
-    caption: {
-      type: String,
-      default: ''
-    },
     title: {
       type: String,
       default: ''
@@ -57,7 +54,6 @@ export default {
     close() {
       this.caption = null;
       this.data = {};
-      this.title = '';
       this.value = '';
       this.show = false;
     }

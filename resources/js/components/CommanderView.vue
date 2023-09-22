@@ -44,11 +44,9 @@
 
           <div class="commander-file-list-header">
             <div class="commander-file-list-column">
-              .filter(i => i.isDir).length
-              files: {{ typeof getBookmarksFiles(panel) }} {{ Array.isArray(getBookmarksFiles(panel)) }};
-
+              files: {{ countFiles(panel, false) }};
               &nbsp;&nbsp;&nbsp;&nbsp;
-              folders: {{ typeof getBookmarksFiles(panel) }} {{ Array.isArray(getBookmarksFiles(panel)) }};
+              folders: {{ countFiles(panel) }};
             </div>
           </div>
         </div>
@@ -67,7 +65,6 @@
 
   <InputModal
     ref="renameModal"
-    caption="New tab name"
     title="Rename tab"
     @apply="bookmarkRenameHandler"
   />
@@ -183,6 +180,7 @@ export default {
      * @param {object} data
      */
     bookmarkRenameShowModal(data) {
+      this.$refs.renameModal.caption = 'New tab name:';
       this.$refs.renameModal.data = data;
       this.$refs.renameModal.value = this.panels[data.panel].bookmarks[data.i].name;
       this.$refs.renameModal.show = true;
@@ -199,6 +197,16 @@ export default {
       this.$refs.bookmarkContextMenu.panel = panel;
       this.$refs.bookmarkContextMenu.left = e.clientX;
       this.$refs.bookmarkContextMenu.show = true;
+    },
+    /**
+     * Count files or folders
+     * @param {string} panel
+     * @param {boolean} checkFolders
+     * @returns {*|number}
+     */
+    countFiles(panel, checkFolders = true) {
+      const files = this.getBookmarksFiles(panel);
+      return Array.isArray(files) ? files.filter(i => i.isDir === checkFolders).length : 0;
     },
     /**
      * Generate a bookmark body
@@ -223,8 +231,26 @@ export default {
         }
       };
     },
+    /**
+     * Send request to remove files or folders
+     * @param data
+     */
     fileRemoveHandler(data) {
-      console.log(data);
+      // Bookmark index
+      const index = this.panels[data.panel]?.shownBookmarkIndex || 0;
+      // Bookmark files
+      const files = this.panels[data.panel].bookmarks[index].files;
+      let requests = [];
+      for (let i = 0, n = data.items.length; i < n; i++) {
+        const file = files.list[data.items[i]];
+        requests.push(this.request(Object.assign(this.routes.remove, {data: {path: file.path + file.basename}})));
+      }
+      Promise.all(requests).then(() => {
+        for (let i = 0, n = data.items.length; i < n; i++) {
+          files.list.splice(data.items[i], 1);
+        }
+        files.inserted = [];
+      });
     },
     /**
      * Retrieve the active bookmark of the active panel
@@ -411,11 +437,6 @@ export default {
             e.shiftKey && this.insertRow(bookmark);
             this.moveUp(bookmark, e);
             break;
-          case 'delete':
-            let remove = bookmark.files.inserted.length ? bookmark.files.inserted : [bookmark.files.selected];
-
-            console.log(remove);
-            break;
           case 'end':
             if (e.shiftKey) {
               for (let i = bookmark.files.selected, n = bookmark.files.list.length; i < n; i++) {
@@ -435,7 +456,7 @@ export default {
           case 'pagedown':
             if (e.shiftKey) {
               for (let i = bookmark.files.selected, n = bookmark.files.selected + 20; i < n; i++) {
-                i < bookmark.files.list.length && this.insertRow(bookmark, i)
+                i < bookmark.files.list.length && this.insertRow(bookmark, i);
               }
             }
             this.jumpDown(bookmark, e);
@@ -459,6 +480,18 @@ export default {
       const key = e.key.toLowerCase();
       const bookmark = this.getActiveBookmark(this.panels.active);
       switch (key) {
+        case 'delete':
+          const items = bookmark.files.inserted.length ? bookmark.files.inserted : [bookmark.files.selected];
+          const caption = items.length > 1
+            ? `${items.length} selected files/folders?` + items.reduce((sum, cur) => sum + `<p>${bookmark.files.list[cur].basename}</p>`, '')
+            : `selected "${bookmark.files.list[items[0]].basename}"?`;
+          this.$refs.deleteModal.data = {
+            items: items,
+            panel: this.panels.active
+          };
+          this.$refs.deleteModal.caption = `Do you really want to remove ${caption}`;
+          this.$refs.deleteModal.show = true;
+          break;
         case 'insert':
           this.insertRow(bookmark).moveDown(bookmark, e);
           break;
