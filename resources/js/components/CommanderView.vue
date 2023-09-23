@@ -75,6 +75,8 @@
     :hideInput="true"
     @apply="fileRemoveHandler"
   />
+
+  <FileInfoModal ref="fileInfo"/>
 </template>
 
 <script>
@@ -82,9 +84,11 @@ import BookmarkContextMenu from "./commander/BookmarkContextMenu.vue";
 import BookmarkElement from "./commander/BookmarkElement.vue";
 import InputModal from "./default-components/InputModal.vue";
 import ListRow from "./commander/ListRow.vue";
+import {BookmarkMixin} from "./mixins/bookmark-mixin.js";
+import FileInfoModal from "./default-components/FileInfoModal.vue";
 
 export default {
-  components: {InputModal, BookmarkElement, BookmarkContextMenu, ListRow},
+  components: {FileInfoModal, InputModal, BookmarkElement, BookmarkContextMenu, ListRow},
   data() {
     return {
       panels: {
@@ -110,94 +114,8 @@ export default {
     request: 'request',
     sortFiles: 'sortFiles'
   },
+  mixins: [BookmarkMixin],
   methods: {
-    /**
-     * Create a bookmark
-     * @param {object} data
-     */
-    bookmarkCreate(data) {
-      const bookmarks = this.panels[data.panel].bookmarks;
-      // Inactivate the current tab
-      for (let i = 0, n = bookmarks.length; i < n; i++) {
-        bookmarks[i].active = false;
-      }
-      // Create copy of the current bookmark as a new one
-      bookmarks.push(this.defaultBookmark(bookmarks[data.i].files.list, true));
-    },
-    /**
-     * Toggle the bookmark "locked" status
-     * @param {object} data
-     */
-    bookmarkLockToggle(data) {
-      this.panels[data.panel].bookmarks[data.i].locked = !this.panels[data.panel].bookmarks[data.i].locked;
-    },
-    /**
-     * Remove bookmark
-     * @param {object} data
-     */
-    bookmarkRemove(data) {
-      const bookmarks = this.panels[data.panel].bookmarks;
-      if (bookmarks.length > 1) {
-        // The active tab was removed
-        const activeRemoved = bookmarks[data.i].active;
-        // Remove tab
-        bookmarks.splice(data.i, 1);
-        // If active tab was removed
-        if (activeRemoved) {
-          // Show the last tab as active
-          const index = bookmarks.length - 1;
-          this.panels[data.panel].shownBookmarkIndex = index;
-          bookmarks[index].active = true;
-        }
-      }
-    },
-    /**
-     * Close all bookmarks except the active one
-     * @param {string} panel
-     */
-    bookmarkRemoveAll(panel) {
-      const bookmarks = this.panels[panel].bookmarks;
-      // Get the active bookmark index
-      let index = 0;
-      for (let i = 0, n = bookmarks.length; i < n; i++) {
-        if (bookmarks[i].active) {
-          index = i;
-          break;
-        }
-      }
-      this.panels[panel].shownBookmarkIndex = 0;
-      this.panels[panel].bookmarks = [Object.assign({}, bookmarks[index])];
-    },
-    /**
-     * Set new name to the bookmark
-     * @param {object} data
-     */
-    bookmarkRenameHandler(data) {
-      this.panels[data.panel].bookmarks[data.i].name = data.value;
-    },
-    /**
-     * Show Bookmark Rename Modal
-     * @param {object} data
-     */
-    bookmarkRenameShowModal(data) {
-      this.$refs.renameModal.caption = 'New tab name:';
-      this.$refs.renameModal.data = data;
-      this.$refs.renameModal.value = this.panels[data.panel].bookmarks[data.i].name;
-      this.$refs.renameModal.show = true;
-    },
-    /**
-     * Call bookmark context menu
-     * @param {event} e
-     * @param {int} i
-     * @param {string} panel
-     */
-    bookmarkRightClick(e, i, panel) {
-      e.preventDefault();
-      this.$refs.bookmarkContextMenu.index = i;
-      this.$refs.bookmarkContextMenu.panel = panel;
-      this.$refs.bookmarkContextMenu.left = e.clientX;
-      this.$refs.bookmarkContextMenu.show = true;
-    },
     /**
      * Count files or folders
      * @param {string} panel
@@ -207,29 +125,6 @@ export default {
     countFiles(panel, checkFolders = true) {
       const files = this.getBookmarksFiles(panel);
       return Array.isArray(files) ? files.filter(i => i.isDir === checkFolders).length : 0;
-    },
-    /**
-     * Generate a bookmark body
-     * @param {Array} list
-     * @param {boolean} active
-     * @returns {object}
-     */
-    defaultBookmark(list = [], active = false) {
-      return {
-        active: active,
-        name: '/',
-        path: '/',
-        locked: false,
-        files: {
-          inserted: [],
-          selected: 0,
-          order: {
-            by: 'name',
-            dir: 'asc'
-          },
-          list: list
-        }
-      };
     },
     /**
      * Send request to remove files or folders
@@ -251,28 +146,6 @@ export default {
         }
         files.inserted = [];
       });
-    },
-    /**
-     * Retrieve the active bookmark of the active panel
-     * @param {string} panel
-     * @returns {object}
-     */
-    getActiveBookmark(panel) {
-      const index = this.panels[panel]?.shownBookmarkIndex || 0;
-      const bookmarks = this.panels[panel].bookmarks;
-
-      return typeof bookmarks[index] !== 'undefined' ? bookmarks[index] : {};
-    },
-    /**
-     * Get files of the active bookmark
-     * @param {string} panel
-     * @returns {Array}
-     */
-    getBookmarksFiles(panel) {
-      // Get active bookmark
-      const bookmark = this.getActiveBookmark(panel);
-      // If there is a bookmark with such index and this bookmark contain files
-      return bookmark.hasOwnProperty('files') ? bookmark.files.list : [];
     },
     /**
      * Insert row
@@ -369,6 +242,13 @@ export default {
       return this;
     },
     /**
+     * Check is any of popup is open
+     * @returns {boolean}
+     */
+    popupIsOpen() {
+      return this.$refs.bookmarkContextMenu.show || this.$refs.deleteModal.show || this.$refs.renameModal.show || this.$refs.fileInfo.show;
+    },
+    /**
      * Select row click
      * @param {object} data
      */
@@ -442,21 +322,21 @@ export default {
       const key = e.key.toLowerCase();
 
       console.log(key);
-      if (['tab', 'arrowdown', 'arrowup', 'end', 'home', 'pagedown', 'pageup', 'delete', ' '].indexOf(key) >= 0) {
+      if (['arrowdown', 'arrowup', 'delete', 'end', 'escape', 'home', 'pagedown', 'pageup', 'tab', ' '].indexOf(key) >= 0) {
         e.preventDefault();
         const bookmark = this.getActiveBookmark(this.panels.active);
 
         switch (key) {
           // Press space to highlight or remove insertion, and get size if item is a folder
           case ' ':
-            if (!this.$refs.bookmarkContextMenu.show && !this.$refs.deleteModal.show && !this.$refs.renameModal.show) {
+            if (!this.popupIsOpen()) {
               this.insertRow(bookmark);
               const file = bookmark.files.list[bookmark.files.selected];
               // Get folder size
               file.isDir && this.request(Object.assign(
                 this.routes.size,
                 {data: {path: file.path + file.basename}}
-              )).then(response => 200 === response.status && (file.size = response.data.size))
+              )).then(response => 200 === response.status && (file.size = response.data.size));
             }
             break;
           // Move down with "arrow down" press
@@ -477,6 +357,14 @@ export default {
               }
             }
             this.moveToEnd(bookmark, e);
+            break;
+          // Close modals on "esc"
+          case 'escape':
+            if (this.popupIsOpen()) {
+              for (let modal of ['bookmarkContextMenu', 'deleteModal', 'renameModal', 'fileInfo']) {
+                this.$refs[modal].show = false;
+              }
+            }
             break;
           // Move to the very beginning of the file list
           case 'home':
@@ -533,6 +421,20 @@ export default {
         // Highlight inserted row
         case 'insert':
           this.insertRow(bookmark).moveDown(bookmark, e);
+          break;
+        case 'enter':
+          if (e.altKey && !this.popupIsOpen()) {
+            const file = bookmark.files.list[bookmark.files.selected];
+            this.request(Object.assign(this.routes.size, {data: {path: file.path + file.basename}})).then(response => {
+              file.size = response.data.size;
+              this.$refs.fileInfo.file = file;
+              if (file.isDir) {
+                this.$refs.fileInfo.file.folders = response.data.folders;
+                this.$refs.fileInfo.file.files = response.data.files;
+              }
+              this.$refs.fileInfo.show = true;
+            });
+          }
           break;
       }
     };

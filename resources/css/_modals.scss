@@ -1,4 +1,4 @@
-.input-modal-wrap {
+.modal-wrap {
   background-color: $white;
   border: 1px solid $gray;
   border-radius: 10px;
@@ -11,7 +11,7 @@
   width: 50%;
   z-index: 1000;
 
-  .input-modal-title {
+  .modal-title {
     background-color: $dark;
     color: $white;
     padding: 10px;
@@ -21,7 +21,7 @@
     > span {font-size: 16px; font-weight: bold}
   }
 
-  .input-modal-close {
+  .modal-close {
     align-items: center;
     border: 1px solid $gray;
     border-radius: 50%;
@@ -44,8 +44,10 @@
     }
   }
 
-  .input-modal-body {padding: 15px}
+  .modal-body {padding: 15px}
+}
 
+.input-modal-wrap {
   .input-modal-caption {font-size: 14px}
 
   .input-modal-text {
@@ -75,4 +77,12 @@
       &:hover {filter: brightness(1.1)}
     }
   }
+}
+
+.file-info-modal-wrap {
+  .file-info-properties td {padding: 5px 20px}
+
+  .file-info-properties td:first-child {text-align: right}
+
+  .file-info-properties .file-browser-icon {height: 30px; width: 30px}
 }

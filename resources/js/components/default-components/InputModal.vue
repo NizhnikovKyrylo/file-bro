@@ -1,12 +1,12 @@
 <template>
-  <div class="input-modal-wrap" v-if="show">
-    <div class="input-modal-title">
+  <div class="input-modal-wrap modal-wrap" v-if="show">
+    <div class="modal-title">
       <span>{{ title }}</span>
-      <div class="input-modal-close" @click="close">
+      <div class="modal-close" @click="close">
         <i class="file-browser-icon close-icon"></i>
       </div>
     </div>
-    <div class="input-modal-body">
+    <div class="modal-body">
       <div class="input-modal-caption"><span v-html="caption"></span></div>
       <div class="input-modal-text">
         <input autocomplete="off" :required="!hideInput" v-model="value" @keyup.enter="apply" v-if="!hideInput">

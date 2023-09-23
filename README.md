@@ -28,7 +28,8 @@
   - ~~"Shift" actions~~
   - ~~del~~
   - ~~insert with "space" + get size~~
-  - get file properties via alt+enter
+  - ~~get file properties via alt+enter~~
+  - ~~press "esc"~~
   - go into folder
     - enter
     - -> button
