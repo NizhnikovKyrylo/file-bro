@@ -40,7 +40,7 @@
     - folder
     - file
   - mouse left click
-    - with shift
+    - ~~with shift~~
     - with control
   - Sort/Change file order
     - name
