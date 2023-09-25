@@ -44,9 +44,9 @@
 
           <div class="commander-file-list-header">
             <div class="commander-file-list-column">
-              files: {{ countFiles(panel, false) }};
+              files: {{ countFiles(this.getBookmarksFiles(panel), false) }};
               &nbsp;&nbsp;&nbsp;&nbsp;
-              folders: {{ countFiles(panel) }};
+              folders: {{ countFiles(this.getBookmarksFiles(panel)) }};
             </div>
           </div>
         </div>
@@ -82,13 +82,14 @@
 <script>
 import BookmarkContextMenu from "./commander/BookmarkContextMenu.vue";
 import BookmarkElement from "./commander/BookmarkElement.vue";
+import FileInfoModal from "./default-components/FileInfoModal.vue";
 import InputModal from "./default-components/InputModal.vue";
 import ListRow from "./commander/ListRow.vue";
 import {BookmarkMixin} from "./mixins/bookmark-mixin.js";
-import FileInfoModal from "./default-components/FileInfoModal.vue";
+import {MovingMixin} from "./mixins/moving-mixin.js";
 
 export default {
-  components: {FileInfoModal, InputModal, BookmarkElement, BookmarkContextMenu, ListRow},
+  components: {BookmarkElement, BookmarkContextMenu, FileInfoModal, InputModal, ListRow},
   data() {
     return {
       panels: {
@@ -111,21 +112,12 @@ export default {
     }
   },
   inject: {
+    countFiles: 'countFiles',
     request: 'request',
     sortFiles: 'sortFiles'
   },
-  mixins: [BookmarkMixin],
+  mixins: [BookmarkMixin, MovingMixin],
   methods: {
-    /**
-     * Count files or folders
-     * @param {string} panel
-     * @param {boolean} checkFolders
-     * @returns {*|number}
-     */
-    countFiles(panel, checkFolders = true) {
-      const files = this.getBookmarksFiles(panel);
-      return Array.isArray(files) ? files.filter(i => i.isDir === checkFolders).length : 0;
-    },
     /**
      * Send request to remove files or folders
      * @param data
@@ -148,6 +140,69 @@ export default {
       });
     },
     /**
+     * Show folder or file info
+     * @param file
+     */
+    fileInfo(file) {
+      this.request(Object.assign(this.routes.size, {data: {path: file.path + file.basename}})).then(response => {
+        file.size = response.data.size;
+        this.$refs.fileInfo.file = file;
+        if (file.isDir) {
+          this.$refs.fileInfo.file.folders = response.data.folders;
+          this.$refs.fileInfo.file.files = response.data.files;
+        }
+        this.$refs.fileInfo.show = true;
+      });
+    },
+    /**
+     *
+     * @param bookmark
+     * @param file
+     */
+    folderOpen(bookmark, file) {
+      return new Promise((resolve, reject) => this.request(Object.assign(this.routes.list, {data: {path: file.path + file.basename}})).then(response => {
+        if (200 === response.status) {
+          let depth = file.filename === '[..]' ? bookmark.files.depth - 1: bookmark.files.depth + 1;
+
+          let files = response.data;
+
+          let path = file.path
+          if (files.length) {
+            path = files[0].path.split('/').filter(i => i !== null && i !== '')
+            if (path.length > 1) {
+              path.splice(-1)
+              path = '/' + path.join('/') + '/'
+            } else {
+              path = '/'
+            }
+          }
+
+          files.sort((a, b) => this.sortFiles(a, b)).reverse().sort((a, b) => this.sortFiles(a, b, 'isDir')).reverse();
+
+          if (depth > 0) {
+            files.unshift({
+              atime: file.atime,
+              basename: '',
+              ctime: file.ctime,
+              ext: "",
+              filename: '[..]',
+              isDir: true,
+              'mime-type': null,
+              mtime: file.mtime,
+              name: file.name,
+              path: path,
+              size: file.size,
+              type: file.type
+            })
+          }
+
+          resolve([depth, files]);
+        } else {
+          reject(response)
+        }
+      }))
+    },
+    /**
      * Insert row
      * @param {object} bookmark
      * @param {int} i
@@ -162,83 +217,6 @@ export default {
         bookmark.files.inserted.push(i);
       }
 
-      return this;
-    },
-    /**
-     * Press "pageDown" handler
-     * @param {object} bookmark
-     * @param {event} e
-     * @returns {this}
-     */
-    jumpDown(bookmark, e) {
-      // Increase position value for 20
-      let position = bookmark.files.selected + 20;
-      // Check the position is lower than the file number
-      position > bookmark.files.list.length - 1 && (position = bookmark.files.list.length - 1);
-      // Move to the position below, Scroll to element
-      this.scrollToElement(bookmark.files.selected = position, e);
-      return this;
-    },
-    /**
-     * Press "pageUp" handler
-     * @param {object} bookmark
-     * @param {event} e
-     * @returns {this}
-     */
-    jumpUp(bookmark, e) {
-      // Decrease position value for 20
-      let position = bookmark.files.selected - 20;
-      // Check the position is greater than 0
-      position < 0 && (position = 0);
-      // Move to the position below, Scroll to element
-      this.scrollToElement(bookmark.files.selected = position, e);
-      return this;
-    },
-    /**
-     * Press "home" handler
-     * @param {object} bookmark
-     * @param {event} e
-     * @returns {this}
-     */
-    moveToBegin(bookmark, e) {
-      this.scrollToElement(bookmark.files.selected = 0, e);
-      return this;
-    },
-    /**
-     * Press "end" handler
-     * @param {object} bookmark
-     * @param {event} e
-     * @returns {this}
-     */
-    moveToEnd(bookmark, e) {
-      const files = bookmark.files.list.length - 1;
-      this.scrollToElement(bookmark.files.selected = files > 0 ? files : 0, e);
-      return this;
-    },
-    /**
-     * Press "Arrow down" handler
-     * @param {object} bookmark
-     * @param {event} e
-     * @returns {this}
-     */
-    moveDown(bookmark, e) {
-      // If element index is less than files number, move the selection below
-      bookmark.files.list.length - 1 > bookmark.files.selected && bookmark.files.selected++;
-      // Scroll to element
-      this.scrollToElement(bookmark.files.selected, e);
-      return this;
-    },
-    /**
-     * Press "Arrow up" handler
-     * @param {object} bookmark
-     * @param {event} e
-     * @returns {this}
-     */
-    moveUp(bookmark, e) {
-      // If element index is greater than 0, move the selection upper
-      bookmark.files.selected > 0 && bookmark.files.selected--;
-      // Scroll to element
-      this.scrollToElement(bookmark.files.selected, e);
       return this;
     },
     /**
@@ -423,17 +401,23 @@ export default {
           this.insertRow(bookmark).moveDown(bookmark, e);
           break;
         case 'enter':
-          if (e.altKey && !this.popupIsOpen()) {
+          if (!this.popupIsOpen()) {
             const file = bookmark.files.list[bookmark.files.selected];
-            this.request(Object.assign(this.routes.size, {data: {path: file.path + file.basename}})).then(response => {
-              file.size = response.data.size;
-              this.$refs.fileInfo.file = file;
-              if (file.isDir) {
-                this.$refs.fileInfo.file.folders = response.data.folders;
-                this.$refs.fileInfo.file.files = response.data.files;
-              }
-              this.$refs.fileInfo.show = true;
-            });
+            if (e.altKey) {
+              this.fileInfo(file)
+            } else if (file.isDir && !bookmark.locked) {
+              this.folderOpen(bookmark, file).then(result => {
+                const [depth, files] = result
+
+                bookmark.files = {
+                  depth: depth,
+                  inserted: [],
+                  list: files,
+                  order: bookmark.files.order,
+                  selected: 0
+                }
+              })
+            }
           }
           break;
       }

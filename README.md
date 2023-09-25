@@ -31,7 +31,7 @@
   - ~~get file properties via alt+enter~~
   - ~~press "esc"~~
   - go into folder
-    - enter
+    - ~~enter~~
     - -> button
   - go upper folder
     - press <- button

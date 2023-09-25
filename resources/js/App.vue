@@ -160,6 +160,15 @@ export default {
   },
   methods: {
     /**
+     * Count files or folders
+     * @param files
+     * @param {boolean} checkFolders
+     * @returns {*|number}
+     */
+    countFiles(files, checkFolders = true) {
+      return Array.isArray(files) ? files.filter(i => i.isDir === checkFolders).length : 0;
+    },
+    /**
      * Get file icon by file properties
      * @param file
      * @returns {string|string|string}
@@ -227,6 +236,7 @@ export default {
   },
   provide() {
     return {
+      countFiles: this.countFiles,
       fileIcon: this.fileIcon,
       fileSize: this.fileSize,
       formatDate: this.formatDate,

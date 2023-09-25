@@ -100,6 +100,7 @@ export const BookmarkMixin = {
         path: '/',
         locked: false,
         files: {
+          depth: 0,
           inserted: [],
           selected: 0,
           order: {
