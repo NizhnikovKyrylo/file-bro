@@ -14,6 +14,8 @@ use App\Http\Controllers\FileBrowserController;
 |
 */
 
+// Get the config of the file browser
+Route::post('/config', [FileBrowserController::class, 'config'])->name('config');
 // Copy folder or file
 Route::post('/copy', [FileBrowserController::class, 'copy'])->name('copy');
 // Create folder

@@ -19,6 +19,19 @@ class FileBrowserController extends Controller
     const FILE_BROWSER_PERM_DENY = 'Cannot access the directory. Permission denied.';
 
     /**
+     * Get configuration settings of the file browser
+     *
+     * @return JsonResponse
+     */
+    public function config(): JsonResponse
+    {
+        return response()->json([
+            'basePath' =>  substr(config('file-browser')['entry'], strlen(public_path())),
+            'restricted' => config('file-browser')['restricted']
+        ]);
+    }
+
+    /**
      * Copy file of folder
      *
      * @param FileManipulationRequest $request

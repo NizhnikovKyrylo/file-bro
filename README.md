@@ -30,18 +30,10 @@
   - ~~insert with "space" + get size~~
   - ~~get file properties via alt+enter~~
   - ~~press "esc"~~
-  - go into folder
-    - ~~enter~~
-    - -> button
-  - go upper folder
-    - press <- button
-    - press "backspace" button
-  - mouse double-click
-    - folder
-    - file
-  - mouse left click
-    - ~~with shift~~
-    - with control
+  - ~~go into folder~~
+  - ~~go upper folder~~
+  - ~~mouse double-click~~
+  - ~~mouse left click~~
   - Sort/Change file order
     - name
     - ext

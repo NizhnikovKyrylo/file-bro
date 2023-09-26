@@ -39,6 +39,8 @@
               :selected="panels.active === panel && i === panels[panel].bookmarks[panels[panel].shownBookmarkIndex].files.selected"
               :panel="panel"
               @selectRow="rowSelected"
+              @openDir="folderOpen"
+              @openFile="fileOpen"
             />
           </div>
 
@@ -112,6 +114,7 @@ export default {
     }
   },
   inject: {
+    getConfig: 'getConfig',
     countFiles: 'countFiles',
     request: 'request',
     sortFiles: 'sortFiles'
@@ -123,20 +126,17 @@ export default {
      * @param data
      */
     fileRemoveHandler(data) {
-      // Bookmark index
-      const index = this.panels[data.panel]?.shownBookmarkIndex || 0;
-      // Bookmark files
-      const files = this.panels[data.panel].bookmarks[index].files;
+      const bookmark = this.getActiveBookmark(data.panel)
       let requests = [];
       for (let i = 0, n = data.items.length; i < n; i++) {
-        const file = files.list[data.items[i]];
+        const file = bookmark.files.list[data.items[i]];
         requests.push(this.request(Object.assign(this.routes.remove, {data: {path: file.path + file.basename}})));
       }
       Promise.all(requests).then(() => {
         for (let i = 0, n = data.items.length; i < n; i++) {
-          files.list.splice(data.items[i], 1);
+          bookmark.files.list.splice(data.items[i], 1);
         }
-        files.inserted = [];
+        bookmark.files.inserted = [];
       });
     },
     /**
@@ -155,25 +155,34 @@ export default {
       });
     },
     /**
+     * Open file in browser
+     * @param data
+     */
+    fileOpen(data) {
+      const bookmark = this.getActiveBookmark(data.panel)
+      const file = bookmark.files.list[data.i];
+      window.open(window.location.origin + this.getConfig().basePath + file.path + file.basename, '_blank')
+    },
+    /**
      *
      * @param bookmark
      * @param file
      */
-    folderOpen(bookmark, file) {
-      return new Promise((resolve, reject) => this.request(Object.assign(this.routes.list, {data: {path: file.path + file.basename}})).then(response => {
+    folderContent(bookmark, file) {
+      this.request(Object.assign(this.routes.list, {data: {path: file.path + file.basename}})).then(response => {
         if (200 === response.status) {
-          let depth = file.filename === '[..]' ? bookmark.files.depth - 1: bookmark.files.depth + 1;
+          let depth = file.filename === '[..]' ? bookmark.files.depth - 1 : bookmark.files.depth + 1;
 
           let files = response.data;
 
-          let path = file.path
+          let path = file.path;
           if (files.length) {
-            path = files[0].path.split('/').filter(i => i !== null && i !== '')
+            path = files[0].path.split('/').filter(i => i !== null && i !== '');
             if (path.length > 1) {
-              path.splice(-1)
-              path = '/' + path.join('/') + '/'
+              path.splice(-1);
+              path = '/' + path.join('/') + '/';
             } else {
-              path = '/'
+              path = '/';
             }
           }
 
@@ -193,14 +202,26 @@ export default {
               path: path,
               size: file.size,
               type: file.type
-            })
+            });
           }
 
-          resolve([depth, files]);
-        } else {
-          reject(response)
+          bookmark.files = {
+            depth: depth,
+            inserted: [],
+            list: files,
+            order: bookmark.files.order,
+            selected: 0
+          };
         }
-      }))
+      });
+    },
+    /**
+     * Open folder
+     * @param data
+     */
+    folderOpen(data) {
+      const bookmark = this.getActiveBookmark(data.panel)
+      !this.popupIsOpen() && !bookmark.locked && this.folderContent(bookmark, bookmark.files.list[data.i]);
     },
     /**
      * Insert row
@@ -233,28 +254,27 @@ export default {
     rowSelected(data) {
       // Set active panel
       this.panels.active = data.panel;
-      const bookmarks = this.panels[this.panels.active].bookmarks;
-
-      for (let i = 0, n = bookmarks.length; i < n; i++) {
-        if (bookmarks[i].active) {
-          // Reset inserted items
-          bookmarks[i].files.inserted = [];
-          // Shift key was pressed
-          if (data.shift) {
-            // Selected row index
-            const selected = bookmarks[i].files.selected;
-            // Check selection direction
-            const selection = bookmarks[i].files.selected > data.i
-              ? {max: selected, min: data.i} // Selection direction up
-              : {max: data.i, min: selected}; // Selection direction down
-            // Highlight the inserted rows
-            bookmarks[i].files.inserted = [...Array(selection.max - selection.min + 1).keys()].map(i => i + selection.min);
-          }
-          // Set selected file position
-          bookmarks[i].files.selected = data.i;
-          break;
-        }
+      const bookmark = this.getActiveBookmark(data.panel)
+      // Reset inserted items
+      !data.ctrl && (bookmark.files.inserted = []);
+      // Check "shift" was pressed
+      if (data.shift) {
+        // Selected row index
+        const selected = bookmark.files.selected;
+        // Check selection direction
+        const selection = bookmark.files.selected > data.i
+          ? {max: selected, min: data.i} // Selection direction up
+          : {max: data.i, min: selected}; // Selection direction down
+        // Highlight the inserted rows
+        bookmark.files.inserted = [...Array(selection.max - selection.min + 1).keys()].map(i => i + selection.min);
       }
+      // Check "ctrl" was pressed
+      if (data.ctrl) {
+        // Selected row index
+        this.insertRow(bookmark, data.i)
+      }
+      // Set selected file position
+      bookmark.files.selected = data.i;
     },
     /**
      * Move focus to the selected row
@@ -299,8 +319,9 @@ export default {
     document.onkeydown = e => {
       const key = e.key.toLowerCase();
 
+      const allowedKeys = ['arrowup', 'arrowright', 'arrowdown', 'arrowleft', 'backspace', 'delete', 'end', 'escape', 'home', 'pagedown', 'pageup', 'tab', ' '];
       console.log(key);
-      if (['arrowdown', 'arrowup', 'delete', 'end', 'escape', 'home', 'pagedown', 'pageup', 'tab', ' '].indexOf(key) >= 0) {
+      if (allowedKeys.indexOf(key) >= 0) {
         e.preventDefault();
         const bookmark = this.getActiveBookmark(this.panels.active);
 
@@ -326,6 +347,19 @@ export default {
           case 'arrowup':
             e.shiftKey && this.insertRow(bookmark);
             this.moveUp(bookmark, e);
+            break;
+          // Move into the folder with "arrow right" press
+          case 'arrowleft':
+          case 'backspace':
+            if (!this.popupIsOpen() && !bookmark.locked && bookmark.files.depth > 0) {
+              this.folderContent(bookmark, bookmark.files.list[0]);
+            }
+            break;
+          case 'arrowright':
+            if (!this.popupIsOpen() && !bookmark.locked) {
+              const file = bookmark.files.list[bookmark.files.selected];
+              file.isDir && this.folderContent(bookmark, file);
+            }
             break;
           // Move to the very end of the file list
           case 'end':
@@ -404,24 +438,15 @@ export default {
           if (!this.popupIsOpen()) {
             const file = bookmark.files.list[bookmark.files.selected];
             if (e.altKey) {
-              this.fileInfo(file)
+              this.fileInfo(file);
             } else if (file.isDir && !bookmark.locked) {
-              this.folderOpen(bookmark, file).then(result => {
-                const [depth, files] = result
-
-                bookmark.files = {
-                  depth: depth,
-                  inserted: [],
-                  list: files,
-                  order: bookmark.files.order,
-                  selected: 0
-                }
-              })
+              this.folderContent(bookmark, file);
             }
           }
           break;
       }
     };
   }
-};
+}
+;
 </script>

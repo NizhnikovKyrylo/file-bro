@@ -36,6 +36,7 @@ export default {
   components: {CommanderView, ListView, TreeView},
   data() {
     return {
+      config: {},
       mimeTypes: {
         // archive
         'file-archive': ['application/gzip', 'application/java-archive', 'application/rar', 'application/zip', 'application/x-bzip2'],
@@ -105,6 +106,7 @@ export default {
         ]
       },
       routes: {
+        config: {method: 'post', url: '/file-browser/config'},
         copy: {method: 'post', url: '/file-browser/copy'},
         create: {method: 'post', url: '/file-browser/create'},
         info: {method: 'post', url: '/file-browser/info'},
@@ -201,6 +203,13 @@ export default {
       return `${date.getDate()}.${date.toLocaleString('default', {month: 'short'})}.${date.getFullYear()}` + ` ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
     },
     /**
+     * Get configuration
+     * @returns {object}
+     */
+    getConfig() {
+      return this.config
+    },
+    /**
      * XHR request
      * @param props
      * @returns {Promise<unknown>}
@@ -236,6 +245,7 @@ export default {
   },
   provide() {
     return {
+      getConfig: this.getConfig,
       countFiles: this.countFiles,
       fileIcon: this.fileIcon,
       fileSize: this.fileSize,
@@ -243,6 +253,9 @@ export default {
       request: this.request,
       sortFiles: this.sortFiles
     };
+  },
+  beforeMount() {
+    this.request(this.routes.config).then(response => 200 === response.status && (this.config = response.data))
   }
 };
 </script>

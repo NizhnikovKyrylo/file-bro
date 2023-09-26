@@ -1,5 +1,10 @@
 <template>
-  <div class="commander-file-list-row" :class="{inserted: inserted, selected: selected}" @click="selectRow">
+  <div
+    class="commander-file-list-row"
+    :class="{inserted: inserted, selected: selected}"
+    @click="select"
+    @dblclick="open"
+  >
     <div class="commander-file-list-column" :title="`${file.filename}.${file.ext}`">
       <i :class="`file-browser-icon ${ fileIcon(file) }`"></i>
       <span>{{ file.filename }}</span>
@@ -18,7 +23,7 @@
 
 <script>
 export default {
-  emits: ['selectRow'],
+  emits: ['openDir', 'openFile', 'selectRow'],
   props: {
     file: {
       type: Object,
@@ -48,10 +53,18 @@ export default {
   },
   methods: {
     /**
-     * Click row event
+     * Double click event
      */
-    selectRow(e) {
-      this.$emit('selectRow', {i: this.index, panel: this.panel, shift: e.shiftKey})
+    open() {
+      this.file.isDir && this.$emit('openDir', {i: this.index, panel: this.panel})
+      !this.file.isDir && this.$emit('openFile', {i: this.index, panel: this.panel})
+    },
+    /**
+     * Click row event
+     * @param e
+     */
+    select(e) {
+      this.$emit('selectRow', {i: this.index, panel: this.panel, shift: e.shiftKey, ctrl: e.ctrlKey})
     }
   }
 }
