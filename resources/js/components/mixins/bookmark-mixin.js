@@ -12,6 +12,7 @@ export const BookmarkMixin = {
       }
       // Create copy of the current bookmark as a new one
       bookmarks.push(this.defaultBookmark(bookmarks[data.i].files.list, true));
+      this.panels[data.panel].shownBookmarkIndex = 1 + data.i;
     },
     /**
      * Toggle the bookmark "locked" status
@@ -55,6 +56,7 @@ export const BookmarkMixin = {
         }
       }
       this.panels[panel].shownBookmarkIndex = 0;
+      // Reassign current bookmark
       this.panels[panel].bookmarks = [Object.assign({}, bookmarks[index])];
     },
     /**
@@ -62,7 +64,10 @@ export const BookmarkMixin = {
      * @param {object} data
      */
     bookmarkRenameHandler(data) {
-      this.panels[data.panel].bookmarks[data.i].name = data.value;
+      const bookmark = this.getBookmark(data.panel, data.i)
+      bookmark.name = data.value;
+      // Set the bookmark was renamed
+      bookmark.renamed = true;
     },
     /**
      * Show Bookmark Rename Modal
@@ -88,6 +93,20 @@ export const BookmarkMixin = {
       this.$refs.bookmarkContextMenu.show = true;
     },
     /**
+     * Change bookmark witch click
+     * @param {object} e
+     * @param {int} index
+     * @param {string} panel
+     */
+    bookmarkSwitch(e, index, panel) {
+      this.panels[panel].shownBookmarkIndex = index;
+      const bookmarks = this.panels[panel].bookmarks;
+      for (let i = 0, n = bookmarks.length; i < n; i++) {
+        bookmarks[i].active = false;
+      }
+      bookmarks[index].active = true;
+    },
+    /**
      * Generate a bookmark body
      * @param {Array} list
      * @param {boolean} active
@@ -98,6 +117,7 @@ export const BookmarkMixin = {
         active: active,
         name: '/',
         path: '/',
+        renamed: false,
         locked: false,
         files: {
           depth: 0,
@@ -114,10 +134,13 @@ export const BookmarkMixin = {
     /**
      * Retrieve the active bookmark of the active panel
      * @param {string} panel
+     * @param {int|null} index
      * @returns {object}
      */
-    getActiveBookmark(panel) {
-      const index = this.panels[panel]?.shownBookmarkIndex || 0;
+    getBookmark(panel, index = null) {
+      if (null == index) {
+        index = this.panels[panel]?.shownBookmarkIndex || 0;
+      }
       const bookmarks = this.panels[panel].bookmarks;
 
       return typeof bookmarks[index] !== 'undefined' ? bookmarks[index] : {};
@@ -129,7 +152,7 @@ export const BookmarkMixin = {
      */
     getBookmarksFiles(panel) {
       // Get active bookmark
-      const bookmark = this.getActiveBookmark(panel);
+      const bookmark = this.getBookmark(panel);
       // If there is a bookmark with such index and this bookmark contain files
       return bookmark.hasOwnProperty('files') ? bookmark.files.list : [];
     }

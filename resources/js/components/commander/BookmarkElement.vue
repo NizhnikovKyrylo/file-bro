@@ -6,6 +6,7 @@
 
 <script>
 export default {
+  emits: ['switchBookmark'],
   props: {
     active: {
       type: Boolean,

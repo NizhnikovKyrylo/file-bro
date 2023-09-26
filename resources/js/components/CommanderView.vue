@@ -10,6 +10,7 @@
             :name="bookmark.name"
             :title="bookmark.path"
             @contextmenu="bookmarkRightClick($event, i, panel)"
+            @click="bookmarkSwitch($event, i, panel)"
           />
         </ul>
 
@@ -126,7 +127,7 @@ export default {
      * @param data
      */
     fileRemoveHandler(data) {
-      const bookmark = this.getActiveBookmark(data.panel)
+      const bookmark = this.getBookmark(data.panel)
       let requests = [];
       for (let i = 0, n = data.items.length; i < n; i++) {
         const file = bookmark.files.list[data.items[i]];
@@ -159,7 +160,7 @@ export default {
      * @param data
      */
     fileOpen(data) {
-      const bookmark = this.getActiveBookmark(data.panel)
+      const bookmark = this.getBookmark(data.panel)
       const file = bookmark.files.list[data.i];
       window.open(window.location.origin + this.getConfig().basePath + file.path + file.basename, '_blank')
     },
@@ -169,7 +170,8 @@ export default {
      * @param file
      */
     folderContent(bookmark, file) {
-      this.request(Object.assign(this.routes.list, {data: {path: file.path + file.basename}})).then(response => {
+      const fullPath = file.path + file.basename;
+      this.request(Object.assign(this.routes.list, {data: {path: fullPath}})).then(response => {
         if (200 === response.status) {
           let depth = file.filename === '[..]' ? bookmark.files.depth - 1 : bookmark.files.depth + 1;
 
@@ -205,6 +207,15 @@ export default {
             });
           }
 
+          if (!bookmark.renamed) {
+            bookmark.name = fullPath.replace(/\/$/, '');
+            bookmark.name = bookmark.name.substring(bookmark.name.lastIndexOf('/') + 1);
+            if (!bookmark.name.length) {
+              bookmark.name = '/'
+            }
+          }
+          bookmark.path = fullPath;
+
           bookmark.files = {
             depth: depth,
             inserted: [],
@@ -220,7 +231,7 @@ export default {
      * @param data
      */
     folderOpen(data) {
-      const bookmark = this.getActiveBookmark(data.panel)
+      const bookmark = this.getBookmark(data.panel)
       !this.popupIsOpen() && !bookmark.locked && this.folderContent(bookmark, bookmark.files.list[data.i]);
     },
     /**
@@ -254,7 +265,7 @@ export default {
     rowSelected(data) {
       // Set active panel
       this.panels.active = data.panel;
-      const bookmark = this.getActiveBookmark(data.panel)
+      const bookmark = this.getBookmark(data.panel)
       // Reset inserted items
       !data.ctrl && (bookmark.files.inserted = []);
       // Check "shift" was pressed
@@ -323,7 +334,7 @@ export default {
       console.log(key);
       if (allowedKeys.indexOf(key) >= 0) {
         e.preventDefault();
-        const bookmark = this.getActiveBookmark(this.panels.active);
+        const bookmark = this.getBookmark(this.panels.active);
 
         switch (key) {
           // Press space to highlight or remove insertion, and get size if item is a folder
@@ -415,7 +426,7 @@ export default {
 
     document.onkeyup = e => {
       const key = e.key.toLowerCase();
-      const bookmark = this.getActiveBookmark(this.panels.active);
+      const bookmark = this.getBookmark(this.panels.active);
       switch (key) {
         // Remove file or folder with "delete" key
         case 'delete':

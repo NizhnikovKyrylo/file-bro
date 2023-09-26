@@ -9,7 +9,7 @@
   - ~~Get files~~
   - ~~click panel to select row~~
   - ~~press "tab"~~
-  - bookmarks
+  - ~~bookmarks~~
     - ~~context menu~~
       - ~~new~~
       - ~~copy~~
@@ -17,7 +17,7 @@
       - ~~lock/unlock~~
       - ~~close~~
       - ~~close all~~
-    - click
+    - ~~click~~
   - ~~move "down" button~~
   - ~~move "up" button~~
   - ~~pageDown~~
