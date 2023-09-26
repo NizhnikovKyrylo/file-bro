@@ -3,6 +3,7 @@
   display: flex;
 
   .file-browser-commander-panel-wrap {
+    border-bottom: 1px solid $black;
     width: calc(50% - 8px);
 
     &:nth-child(odd) {margin-right: 8px}
@@ -41,62 +42,61 @@
     background-color: $white;
     border-left: 1px solid transparent;
     border-right: 1px solid transparent;
+    max-height: 80vh;
+    overflow: auto;
 
-    .commander-file-list-content {
-      max-height: 70vh;
-      overflow: auto;
-    }
-
-    .commander-file-list-header, .commander-file-list-row {
-      align-items: center;
-      background-color: $white;
-      display: flex;
-      flex-wrap: nowrap;
-
-      .commander-file-list-column {
-        align-items: center;
-        cursor: pointer;
-        display: flex;
-        font-size: 14px;
-        height: 28px;
-        padding: 6px 12px;
-        position: relative;
-        width: 100px;
-
-        &:first-child {border: none; width: calc(100% - 380px)}
-
-        &:last-child {width: 180px}
-      }
-    }
-
-    .commander-file-list-header {
-      border-bottom: 1px solid $black;
-
-      .commander-file-list-column .file-browser-icon {margin-left: 4px}
-    }
-
-    .commander-file-list-row {
+    .commander-file-list {
       user-select: none;
 
-      &:nth-child(even) {background-color: $gray}
+      thead {
+        background-color: $white;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+      }
 
-      &.selected {background-color: $violet; color: $white}
+      tfoot {
+        background-color: $white;
+        bottom: 0;
+        position: sticky;
+        z-index: 2;
+      }
 
-      &.inserted {color: $red}
+      tbody tr {
+        &:nth-child(odd) {background-color: $gray}
 
-      .commander-file-list-column {
-        .file-browser-icon {
-          position: absolute;
-          left: 4px;
-          top: 50%;
-          transform: translateY(-50%);
+        &.inserted {color: $red}
+
+        &.selected {background-color: $violet; color: $white}
+      }
+
+      th {
+        cursor: pointer;
+        padding: 6px 24px 6px 6px;
+
+        div {display: flex; flex-wrap: nowrap}
+
+        .file-browser-icon {display: none; margin-left: 6px}
+
+        &.active .file-browser-icon {display: block}
+      }
+
+      td {
+        padding: 3px 6px;
+        overflow: hidden;
+        white-space: nowrap;
+
+        &:first-child {
+          padding: 3px;
+
+          .file-browser-icon {margin: 0 6px 0 4px}
+
+          div {
+            overflow: hidden;
+            text-overflow: fade;
+            width: 320px;
+          }
         }
-        span {
-          overflow: hidden;
-          white-space: nowrap;
-        }
-
-        &:first-child span {padding-left: 22px}
       }
     }
   }

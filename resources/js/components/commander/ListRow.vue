@@ -1,24 +1,25 @@
 <template>
-  <div
-    class="commander-file-list-row"
+  <tr
     :class="{inserted: inserted, selected: selected}"
     @click="select"
     @dblclick="open"
   >
-    <div class="commander-file-list-column" :title="`${file.filename}.${file.ext}`">
-      <i :class="`file-browser-icon ${ fileIcon(file) }`"></i>
-      <span>{{ file.filename }}</span>
-    </div>
-    <div class="commander-file-list-column">
+    <td :title="`${file.filename}.${file.ext}`">
+      <div>
+        <i :class="`file-browser-icon ${ fileIcon(file) }`"></i>
+        <span>{{ file.filename }}</span>
+      </div>
+    </td>
+    <td>
       <span>{{ file.ext }}</span>
-    </div>
-    <div class="commander-file-list-column">
+    </td>
+    <td>
       <span>{{ fileSize(file.size) }}</span>
-    </div>
-    <div class="commander-file-list-column">
+    </td>
+    <td>
       <span>{{ formatDate(file.mtime) }}</span>
-    </div>
-  </div>
+    </td>
+  </tr>
 </template>
 
 <script>

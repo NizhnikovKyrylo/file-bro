@@ -15,23 +15,36 @@
         </ul>
 
         <div class="commander-file-list-wrap">
-          <div class="commander-file-list-header">
-            <div class="commander-file-list-column">
-              <span>Name</span>
-              <i class="file-browser-icon arrow-up"></i>
-            </div>
-            <div class="commander-file-list-column">
-              <span>Ext</span>
-            </div>
-            <div class="commander-file-list-column">
-              <span>Size</span>
-            </div>
-            <div class="commander-file-list-column">
-              <span>Date</span>
-            </div>
-          </div>
-
-          <div class="commander-file-list-content" v-if="panels[panel].bookmarks.length">
+          <table class="commander-file-list">
+            <thead>
+            <tr>
+              <th class="active">
+                <div>
+                  <span>Name</span>
+                  <i class="file-browser-icon arrow-up"></i>
+                </div>
+              </th>
+              <th>
+                <div>
+                  <span>Ext</span>
+                  <i class="file-browser-icon arrow-up"></i>
+                </div>
+              </th>
+              <th>
+                <div>
+                  <span>Size</span>
+                  <i class="file-browser-icon arrow-up"></i>
+                </div>
+              </th>
+              <th>
+                <div>
+                  <span>Date</span>
+                  <i class="file-browser-icon arrow-up"></i>
+                </div>
+              </th>
+            </tr>
+            </thead>
+            <tbody v-if="panels[panel].bookmarks.length">
             <ListRow
               v-for="(file, i) in getBookmarksFiles(panel)"
               :file="file"
@@ -43,15 +56,17 @@
               @openDir="folderOpen"
               @openFile="fileOpen"
             />
-          </div>
-
-          <div class="commander-file-list-header">
-            <div class="commander-file-list-column">
-              files: {{ countFiles(this.getBookmarksFiles(panel), false) }};
-              &nbsp;&nbsp;&nbsp;&nbsp;
-              folders: {{ countFiles(this.getBookmarksFiles(panel)) }};
-            </div>
-          </div>
+            </tbody>
+            <tfoot>
+            <tr>
+              <td colspan="4">
+                files: {{ countFiles(this.getBookmarksFiles(panel), false) }};
+                &nbsp;&nbsp;&nbsp;&nbsp;
+                folders: {{ countFiles(this.getBookmarksFiles(panel)) }};
+              </td>
+            </tr>
+            </tfoot>
+          </table>
         </div>
       </div>
     </template>
@@ -88,8 +103,9 @@ import BookmarkElement from "./commander/BookmarkElement.vue";
 import FileInfoModal from "./default-components/FileInfoModal.vue";
 import InputModal from "./default-components/InputModal.vue";
 import ListRow from "./commander/ListRow.vue";
-import {BookmarkMixin} from "./mixins/bookmark-mixin.js";
-import {MovingMixin} from "./mixins/moving-mixin.js";
+import {BookmarkMixin} from "./commander/mixins/bookmark-mixin.js";
+import {MovingMixin} from "./commander/mixins/moving-mixin.js";
+import {FileOperationsMixin} from "./commander/mixins/file-operations-mixin.js";
 
 export default {
   components: {BookmarkElement, BookmarkContextMenu, FileInfoModal, InputModal, ListRow},
@@ -120,120 +136,8 @@ export default {
     request: 'request',
     sortFiles: 'sortFiles'
   },
-  mixins: [BookmarkMixin, MovingMixin],
+  mixins: [BookmarkMixin, FileOperationsMixin, MovingMixin],
   methods: {
-    /**
-     * Send request to remove files or folders
-     * @param data
-     */
-    fileRemoveHandler(data) {
-      const bookmark = this.getBookmark(data.panel)
-      let requests = [];
-      for (let i = 0, n = data.items.length; i < n; i++) {
-        const file = bookmark.files.list[data.items[i]];
-        requests.push(this.request(Object.assign(this.routes.remove, {data: {path: file.path + file.basename}})));
-      }
-      Promise.all(requests).then(() => {
-        for (let i = 0, n = data.items.length; i < n; i++) {
-          bookmark.files.list.splice(data.items[i], 1);
-        }
-        bookmark.files.inserted = [];
-      });
-    },
-    /**
-     * Show folder or file info
-     * @param file
-     */
-    fileInfo(file) {
-      this.request(Object.assign(this.routes.size, {data: {path: file.path + file.basename}})).then(response => {
-        file.size = response.data.size;
-        this.$refs.fileInfo.file = file;
-        if (file.isDir) {
-          this.$refs.fileInfo.file.folders = response.data.folders;
-          this.$refs.fileInfo.file.files = response.data.files;
-        }
-        this.$refs.fileInfo.show = true;
-      });
-    },
-    /**
-     * Open file in browser
-     * @param data
-     */
-    fileOpen(data) {
-      const bookmark = this.getBookmark(data.panel)
-      const file = bookmark.files.list[data.i];
-      window.open(window.location.origin + this.getConfig().basePath + file.path + file.basename, '_blank')
-    },
-    /**
-     *
-     * @param bookmark
-     * @param file
-     */
-    folderContent(bookmark, file) {
-      const fullPath = file.path + file.basename;
-      this.request(Object.assign(this.routes.list, {data: {path: fullPath}})).then(response => {
-        if (200 === response.status) {
-          let depth = file.filename === '[..]' ? bookmark.files.depth - 1 : bookmark.files.depth + 1;
-
-          let files = response.data;
-
-          let path = file.path;
-          if (files.length) {
-            path = files[0].path.split('/').filter(i => i !== null && i !== '');
-            if (path.length > 1) {
-              path.splice(-1);
-              path = '/' + path.join('/') + '/';
-            } else {
-              path = '/';
-            }
-          }
-
-          files.sort((a, b) => this.sortFiles(a, b)).reverse().sort((a, b) => this.sortFiles(a, b, 'isDir')).reverse();
-
-          if (depth > 0) {
-            files.unshift({
-              atime: file.atime,
-              basename: '',
-              ctime: file.ctime,
-              ext: "",
-              filename: '[..]',
-              isDir: true,
-              'mime-type': null,
-              mtime: file.mtime,
-              name: file.name,
-              path: path,
-              size: file.size,
-              type: file.type
-            });
-          }
-
-          if (!bookmark.renamed) {
-            bookmark.name = fullPath.replace(/\/$/, '');
-            bookmark.name = bookmark.name.substring(bookmark.name.lastIndexOf('/') + 1);
-            if (!bookmark.name.length) {
-              bookmark.name = '/'
-            }
-          }
-          bookmark.path = fullPath;
-
-          bookmark.files = {
-            depth: depth,
-            inserted: [],
-            list: files,
-            order: bookmark.files.order,
-            selected: 0
-          };
-        }
-      });
-    },
-    /**
-     * Open folder
-     * @param data
-     */
-    folderOpen(data) {
-      const bookmark = this.getBookmark(data.panel)
-      !this.popupIsOpen() && !bookmark.locked && this.folderContent(bookmark, bookmark.files.list[data.i]);
-    },
     /**
      * Insert row
      * @param {object} bookmark
@@ -251,6 +155,9 @@ export default {
 
       return this;
     },
+    orderByName() {
+
+    },
     /**
      * Check is any of popup is open
      * @returns {boolean}
@@ -265,7 +172,7 @@ export default {
     rowSelected(data) {
       // Set active panel
       this.panels.active = data.panel;
-      const bookmark = this.getBookmark(data.panel)
+      const bookmark = this.getBookmark(data.panel);
       // Reset inserted items
       !data.ctrl && (bookmark.files.inserted = []);
       // Check "shift" was pressed
@@ -282,7 +189,7 @@ export default {
       // Check "ctrl" was pressed
       if (data.ctrl) {
         // Selected row index
-        this.insertRow(bookmark, data.i)
+        this.insertRow(bookmark, data.i);
       }
       // Set selected file position
       bookmark.files.selected = data.i;
@@ -330,7 +237,21 @@ export default {
     document.onkeydown = e => {
       const key = e.key.toLowerCase();
 
-      const allowedKeys = ['arrowup', 'arrowright', 'arrowdown', 'arrowleft', 'backspace', 'delete', 'end', 'escape', 'home', 'pagedown', 'pageup', 'tab', ' '];
+      const allowedKeys = [
+        'arrowup',
+        'arrowright',
+        'arrowdown',
+        'arrowleft',
+        'backspace',
+        'delete',
+        'end',
+        'escape',
+        'home',
+        'pagedown',
+        'pageup',
+        'tab',
+        ' '
+      ];
       console.log(key);
       if (allowedKeys.indexOf(key) >= 0) {
         e.preventDefault();
