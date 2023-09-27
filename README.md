@@ -34,6 +34,7 @@
   - ~~go upper folder~~
   - ~~mouse double-click~~
   - ~~mouse left click~~
+  - Set [..] dir to backend
   - Sort/Change file order
     - name
     - ext
@@ -61,3 +62,6 @@
     - paste
     - ========
     - show file properties
+- Pack
+- Unpack
+- Search

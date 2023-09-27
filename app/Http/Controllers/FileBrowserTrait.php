@@ -86,7 +86,7 @@ trait FileBrowserTrait
             'name' => mb_strtolower($filename),
             'ext' => $file->getExtension(),
             'mime-type' => $file->isFile() ? mime_content_type($file->getPathname()) : null,
-            'size' => $file->getSize(),
+            'size' => $file->isDir() ? 4096 : $file->getSize(),
             'type' => $file->getType(),
             'ctime' => $file->getCTime(),
             'mtime' => $file->getMTime(),

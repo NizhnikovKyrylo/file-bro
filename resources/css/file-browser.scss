@@ -79,6 +79,8 @@
   mask-repeat: no-repeat;
   width: 16px;
 
+  &.rotate {transform: rotate(180deg)}
+
   &.arrow-up {mask-image: url("../icons/arrow-up.svg")}
 
   &.close-icon {mask-image: url("../icons/times.svg")}

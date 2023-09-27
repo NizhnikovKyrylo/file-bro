@@ -119,6 +119,12 @@ export const BookmarkMixin = {
         path: '/',
         renamed: false,
         locked: false,
+        filters: {
+          order: {
+            by: 'name',
+            dir: false
+          }
+        },
         files: {
           depth: 0,
           inserted: [],

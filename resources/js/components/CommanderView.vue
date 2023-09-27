@@ -18,28 +18,28 @@
           <table class="commander-file-list">
             <thead>
             <tr>
-              <th class="active">
+              <th :class="{active: getBookmark(panels.active)?.filters?.order?.by === 'name'}" @click="orderBy('name')">
                 <div>
                   <span>Name</span>
-                  <i class="file-browser-icon arrow-up"></i>
+                  <i class="file-browser-icon arrow-up" :class="{rotate: getBookmark(panels.active)?.filters?.order?.dir}"></i>
                 </div>
               </th>
-              <th>
+              <th :class="{active: getBookmark(panels.active)?.filters?.order?.by === 'ext'}">
                 <div>
                   <span>Ext</span>
-                  <i class="file-browser-icon arrow-up"></i>
+                  <i class="file-browser-icon arrow-up" :class="{rotate: getBookmark(panels.active)?.filters?.order?.dir}"></i>
                 </div>
               </th>
-              <th>
+              <th :class="{active: getBookmark(panels.active)?.filters?.order?.by === 'size'}">
                 <div>
                   <span>Size</span>
-                  <i class="file-browser-icon arrow-up"></i>
+                  <i class="file-browser-icon arrow-up" :class="{rotate: getBookmark(panels.active)?.filters?.order?.dir}"></i>
                 </div>
               </th>
-              <th>
+              <th :class="{active: getBookmark(panels.active)?.filters?.order?.by === 'ctime'}">
                 <div>
                   <span>Date</span>
-                  <i class="file-browser-icon arrow-up"></i>
+                  <i class="file-browser-icon arrow-up" :class="{rotate: getBookmark(panels.active)?.filters?.order?.dir}"></i>
                 </div>
               </th>
             </tr>
@@ -155,8 +155,15 @@ export default {
 
       return this;
     },
-    orderByName() {
-
+    orderBy(by) {
+      const bookmark = this.getBookmark(this.panels.active)
+      const order = bookmark.filters.order;
+      if (by === order.by) {
+        order.dir = !order.dir
+      }
+      this.getContent(bookmark.path, order).then(files => {
+        bookmark.files.list = files
+      })
     },
     /**
      * Check is any of popup is open
@@ -220,17 +227,10 @@ export default {
     }
   },
   beforeMount() {
-    this.request(Object.assign(this.routes.list, {data: {path: '/'}})).then(response => {
-      if (200 === response.status) {
-        // Retrieve file fist from request
-        const files = response.data;
-        // Sort files by name and folder type. First go folders then files
-        files.sort((a, b) => this.sortFiles(a, b)).reverse().sort((a, b) => this.sortFiles(a, b, 'isDir')).reverse();
-
-        this.panels.left.bookmarks.push(this.defaultBookmark(files, true));
-        this.panels.right.bookmarks.push(this.defaultBookmark(files, true));
-      }
-    });
+    this.getContent('/', {by: 'name', dir: false}).then(files => {
+      this.panels.left.bookmarks.push(this.defaultBookmark(files, true));
+      this.panels.right.bookmarks.push(this.defaultBookmark(files, true));
+    })
   },
   mounted() {
     // Change panel with 'tab' press

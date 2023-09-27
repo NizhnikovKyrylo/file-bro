@@ -156,7 +156,7 @@ export default {
         }
       },
       view: {
-        active: 'commander',
+        active: 'commander'
       }
     };
   },
@@ -191,7 +191,8 @@ export default {
     fileSize(size) {
       const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
       const value = size > 0 ? Math.floor(Math.log(Math.abs(size)) / Math.log(1024)) : 0;
-      return (size > 0 ? (size / Math.pow(1024, value)).toFixed(1) : 0) + ' ' + units[value];
+      const result = (size > 0 ? (size / Math.pow(1024, value)) : 0);
+      return (units[value] === 'B' ? result : result.toFixed(1)) + ' ' + units[value];
     },
     /**
      * Convert Unix timestamp to date format j.M.Y H:i:s
@@ -200,14 +201,30 @@ export default {
      */
     formatDate(time) {
       const date = new Date(time * 1000);
-      return `${date.getDate()}.${date.toLocaleString('default', {month: 'short'})}.${date.getFullYear()}` + ` ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+      const res = {
+        y: date.getFullYear(),
+        m: date.toLocaleString('default', {month: 'short'}),
+        d: this.padDate(date.getDate()),
+        h: this.padDate(date.getHours()),
+        i: this.padDate(date.getMinutes()),
+        s: this.padDate(date.getSeconds())
+      }
+
+      return `${res.d}.${res.m}.${res.y} ${res.h}:${res.i}:${res.s}`
     },
     /**
      * Get configuration
      * @returns {object}
      */
     getConfig() {
-      return this.config
+      return this.config;
+    },
+    /**
+     * @param val
+     * @returns {string}
+     */
+    padDate(val) {
+      return ('' + val).padStart(2, '0')
     },
     /**
      * XHR request
@@ -255,7 +272,7 @@ export default {
     };
   },
   beforeMount() {
-    this.request(this.routes.config).then(response => 200 === response.status && (this.config = response.data))
+    this.request(this.routes.config).then(response => 200 === response.status && (this.config = response.data));
   }
 };
 </script>
