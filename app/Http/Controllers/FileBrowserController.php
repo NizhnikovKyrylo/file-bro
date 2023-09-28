@@ -128,6 +128,14 @@ class FileBrowserController extends Controller
             }
         }
 
+        $entity_point = $this->cap(config('file-browser.entry'));
+        if ($path !== $entity_point) {
+            $instance = $this->instanceInfo($path);
+            $instance['basename'] = '';
+            $instance['filename'] = '[..]';
+            $result->prepend($instance);
+        }
+
         return response()->json($result);
     }
 

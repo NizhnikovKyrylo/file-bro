@@ -18,30 +18,10 @@
           <table class="commander-file-list">
             <thead>
             <tr>
-              <th :class="{active: getBookmark(panels.active)?.filters?.order?.by === 'name'}" @click="orderBy('name')">
-                <div>
-                  <span>Name</span>
-                  <i class="file-browser-icon arrow-up" :class="{rotate: getBookmark(panels.active)?.filters?.order?.dir}"></i>
-                </div>
-              </th>
-              <th :class="{active: getBookmark(panels.active)?.filters?.order?.by === 'ext'}">
-                <div>
-                  <span>Ext</span>
-                  <i class="file-browser-icon arrow-up" :class="{rotate: getBookmark(panels.active)?.filters?.order?.dir}"></i>
-                </div>
-              </th>
-              <th :class="{active: getBookmark(panels.active)?.filters?.order?.by === 'size'}">
-                <div>
-                  <span>Size</span>
-                  <i class="file-browser-icon arrow-up" :class="{rotate: getBookmark(panels.active)?.filters?.order?.dir}"></i>
-                </div>
-              </th>
-              <th :class="{active: getBookmark(panels.active)?.filters?.order?.by === 'ctime'}">
-                <div>
-                  <span>Date</span>
-                  <i class="file-browser-icon arrow-up" :class="{rotate: getBookmark(panels.active)?.filters?.order?.dir}"></i>
-                </div>
-              </th>
+              <TableHeadCol  name="Name" type="name" :panel="panels.active" @setOrder="orderBy"/>
+              <TableHeadCol  name="Ext" type="ext" :panel="panels.active" @setOrder="orderBy"/>
+              <TableHeadCol  name="Size" type="size" :panel="panels.active" @setOrder="orderBy"/>
+              <TableHeadCol  name="Date" type="ctime" :panel="panels.active" @setOrder="orderBy"/>
             </tr>
             </thead>
             <tbody v-if="panels[panel].bookmarks.length">
@@ -71,6 +51,17 @@
       </div>
     </template>
   </div>
+  <div class="file-browser-commands-bar-wrap">
+    <ul>
+      <li @click="fileRenameShowModal"><span>Rename</span></li>
+      <li><span>View</span></li>
+      <li><span>Upload</span></li>
+      <li><span>Copy</span></li>
+      <li><span>Move</span></li>
+      <li><span>Folder</span></li>
+      <li><span>Delete</span></li>
+    </ul>
+  </div>
 
   <BookmarkContextMenu
     ref="bookmarkContextMenu"
@@ -82,9 +73,15 @@
   />
 
   <InputModal
-    ref="renameModal"
+    ref="renameTabModal"
     title="Rename tab"
     @apply="bookmarkRenameHandler"
+  />
+
+  <InputModal
+    ref="renameFileModal"
+    title="Rename file"
+    @apply="fileRenameHandler"
   />
 
   <InputModal
@@ -106,11 +103,18 @@ import ListRow from "./commander/ListRow.vue";
 import {BookmarkMixin} from "./commander/mixins/bookmark-mixin.js";
 import {MovingMixin} from "./commander/mixins/moving-mixin.js";
 import {FileOperationsMixin} from "./commander/mixins/file-operations-mixin.js";
+import TableHeadCol from "./commander/TableHeadCol.vue";
 
 export default {
-  components: {BookmarkElement, BookmarkContextMenu, FileInfoModal, InputModal, ListRow},
+  components: {TableHeadCol, BookmarkElement, BookmarkContextMenu, FileInfoModal, InputModal, ListRow},
   data() {
     return {
+      header: [
+        {name: 'Name', type: 'name'},
+        {name: 'Ext', type: 'ext'},
+        {name: 'Size', type: 'size'},
+        {name: 'Date', type: 'ctime'}
+      ],
       panels: {
         active: 'left',
         left: {
@@ -155,22 +159,26 @@ export default {
 
       return this;
     },
+    /**
+     * Set column order
+     * @param by
+     */
     orderBy(by) {
       const bookmark = this.getBookmark(this.panels.active)
       const order = bookmark.filters.order;
       if (by === order.by) {
         order.dir = !order.dir
+      } else {
+        order.by = by;
       }
-      this.getContent(bookmark.path, order).then(files => {
-        bookmark.files.list = files
-      })
+      this.getContent(bookmark.path, order).then(files => {bookmark.files.list = files})
     },
     /**
      * Check is any of popup is open
      * @returns {boolean}
      */
     popupIsOpen() {
-      return this.$refs.bookmarkContextMenu.show || this.$refs.deleteModal.show || this.$refs.renameModal.show || this.$refs.fileInfo.show;
+      return this.$refs.bookmarkContextMenu.show || this.$refs.deleteModal.show || this.$refs.renameTabModal.show || this.$refs.fileInfo.show;
     },
     /**
      * Select row click
@@ -305,7 +313,7 @@ export default {
           // Close modals on "esc"
           case 'escape':
             if (this.popupIsOpen()) {
-              for (let modal of ['bookmarkContextMenu', 'deleteModal', 'renameModal', 'fileInfo']) {
+              for (let modal of ['bookmarkContextMenu', 'deleteModal', 'renameTabModal', 'fileInfo']) {
                 this.$refs[modal].show = false;
               }
             }
@@ -379,6 +387,5 @@ export default {
       }
     };
   }
-}
-;
+};
 </script>

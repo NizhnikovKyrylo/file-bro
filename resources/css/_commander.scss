@@ -3,7 +3,6 @@
   display: flex;
 
   .file-browser-commander-panel-wrap {
-    border-bottom: 1px solid $black;
     width: calc(50% - 8px);
 
     &:nth-child(odd) {margin-right: 8px}
@@ -47,6 +46,7 @@
 
     .commander-file-list {
       user-select: none;
+      width: 100%;
 
       thead {
         background-color: $white;
@@ -104,5 +104,19 @@
   .file-browser-commander-panel-wrap.active .commander-file-list-wrap {
     border-left: 1px solid $black;
     border-right: 1px solid $black;
+  }
+}
+
+.file-browser-commands-bar-wrap ul {
+  border: 1px solid black;
+  display: flex;
+
+  li {
+    cursor: pointer;
+    padding: 10px;
+    text-align: center;
+    width: 14.285%;
+
+    &:hover {background-color: $gray}
   }
 }

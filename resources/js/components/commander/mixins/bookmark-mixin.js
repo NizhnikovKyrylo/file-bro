@@ -74,10 +74,10 @@ export const BookmarkMixin = {
      * @param {object} data
      */
     bookmarkRenameShowModal(data) {
-      this.$refs.renameModal.caption = 'New tab name:';
-      this.$refs.renameModal.data = data;
-      this.$refs.renameModal.value = this.panels[data.panel].bookmarks[data.i].name;
-      this.$refs.renameModal.show = true;
+      this.$refs.renameTabModal.caption = 'New tab name:';
+      this.$refs.renameTabModal.data = data;
+      this.$refs.renameTabModal.value = this.panels[data.panel].bookmarks[data.i].name;
+      this.$refs.renameTabModal.show = true;
     },
     /**
      * Call bookmark context menu
@@ -139,12 +139,15 @@ export const BookmarkMixin = {
     },
     /**
      * Retrieve the active bookmark of the active panel
-     * @param {string} panel
+     * @param {string|null} panel
      * @param {int|null} index
      * @returns {object}
      */
-    getBookmark(panel, index = null) {
-      if (null == index) {
+    getBookmark(panel = null, index = null) {
+      if (null === panel) {
+        panel = this.panels.active;
+      }
+      if (null === index) {
         index = this.panels[panel]?.shownBookmarkIndex || 0;
       }
       const bookmarks = this.panels[panel].bookmarks;
@@ -161,6 +164,11 @@ export const BookmarkMixin = {
       const bookmark = this.getBookmark(panel);
       // If there is a bookmark with such index and this bookmark contain files
       return bookmark.hasOwnProperty('files') ? bookmark.files.list : [];
+    }
+  },
+  provide() {
+    return {
+      getBookmark: this.getBookmark
     }
   }
 }

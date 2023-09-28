@@ -34,20 +34,15 @@
   - ~~go upper folder~~
   - ~~mouse double-click~~
   - ~~mouse left click~~
-  - Set [..] dir to backend
-  - Sort/Change file order
-    - name
-    - ext
-    - size
-    - date
+  - ~~Sort/Change file order~~
   - bottom panel
-    - rename F2
-    - view file F3
-    - upload file F4
-    - copy F5
-    - move F6
-    - create folder F7
-    - remove F8
+    - rename
+    - view file
+    - upload file
+    - copy
+    - move
+    - create folder
+    - remove
   - context menu
     - open
     - edit
