@@ -60,7 +60,7 @@ class FileBrowserControllerTest extends TestCase
 
     protected function tearDown(): void
     {
-        File::deleteDirectory($this->root);
+//        File::deleteDirectory($this->root);
 
         parent::tearDown();
     }

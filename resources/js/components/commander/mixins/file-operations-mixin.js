@@ -25,8 +25,34 @@ export const FileOperationsMixin = {
       window.open(window.location.origin + this.getConfig().basePath + file.path + file.basename, '_blank');
     },
     fileRenameHandler(data) {
-      console.log(data);
-      // TODO
+      const files = this.getBookmarksFiles(data.panel);
+      const file = files[data.i];
+      let filename = data.value.split('.')
+      const ext = filename.pop();
+
+      let rename = {
+        constraint: false,
+        answer: true
+      };
+      for (let i = 0, n = files.length; i < n; i++) {
+        if (files[i].basename === data.value) {
+          rename.constraint = true;
+          break;
+        }
+      }
+
+      if (rename.constraint) {
+        const type = file.isDir ? 'folder' : 'file';
+        rename.answer = confirm(`The ${type} "${data.value}" already exists. Do you want to overwrite it?`);
+      }
+
+      if (rename.answer) {
+
+      }
+      // file.basename = data.value;
+      // file.ext = ext;
+      // file.filename = filename.join('.');
+      // file.name = file.name.toLowerCase();
     },
     fileRenameShowModal() {
       this.$refs.renameFileModal.caption = 'New file name:';
