@@ -4,7 +4,7 @@
     @click="select"
     @dblclick="open"
   >
-    <td :title="`${file.filename}.${file.ext}`">
+    <td :title="fullName">
       <div>
         <i :class="`file-browser-icon ${ fileIcon(file) }`"></i>
         <span>{{ file.filename }}</span>
@@ -25,6 +25,11 @@
 <script>
 export default {
   emits: ['openDir', 'openFile', 'selectRow'],
+  computed: {
+    fullName() {
+      return this.file.ext.length ? this.file.filename + '.' + this.file.ext : this.file.filename
+    }
+  },
   props: {
     file: {
       type: Object,

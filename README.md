@@ -36,7 +36,7 @@
   - ~~mouse left click~~
   - ~~Sort/Change file order~~
   - bottom panel
-    - rename
+    - ~~rename~~
     - view file
     - upload file
     - copy

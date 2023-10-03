@@ -27,38 +27,47 @@ export const FileOperationsMixin = {
     fileRenameHandler(data) {
       const files = this.getBookmarksFiles(data.panel);
       const file = files[data.i];
-      let filename = data.value.split('.')
-      const ext = filename.pop();
-
-      let rename = {
-        constraint: false,
-        answer: true
-      };
+      // Check if renamed folder already existing
       for (let i = 0, n = files.length; i < n; i++) {
-        if (files[i].basename === data.value) {
-          rename.constraint = true;
-          break;
+        if (files[i].isDir && files[i].basename === data.value && file.basename !== data.value) {
+          alert(`Directory "${data.value}" already exists`)
+          return false
         }
       }
 
-      if (rename.constraint) {
-        const type = file.isDir ? 'folder' : 'file';
-        rename.answer = confirm(`The ${type} "${data.value}" already exists. Do you want to overwrite it?`);
-      }
+      if (file.basename !== data.value) {
+        this.request(Object.assign(this.routes.move, {
+          data: {
+            from: file.path + file.basename,
+            to: file.path + data.value
+          }
+        })).then(response => {
+          if (200 === response.status) {
+            let path = response.data.path.split('/');
+            let filename = path.pop().split('.');
+            path.join('/');
+            let ext = filename.length < 2 ? '' : filename.split('.').pop();
 
-      if (rename.answer) {
-
+            file.basename = data.value;
+            file.ext = ext;
+            file.filename = filename.join('.');
+            file.path = path;
+          }
+        })
       }
-      // file.basename = data.value;
-      // file.ext = ext;
-      // file.filename = filename.join('.');
-      // file.name = file.name.toLowerCase();
     },
     fileRenameShowModal() {
+      console.log('querySelector' in this.$refs.renameFileModal.$el);
       this.$refs.renameFileModal.caption = 'New file name:';
       this.$refs.renameFileModal.data = {i: this.getBookmark().files.selected, panel: this.panels.active};
       this.$refs.renameFileModal.value = this.getSelected();
       this.$refs.renameFileModal.show = true;
+      const awaitPopupOpen = setInterval(() => {
+        if ('querySelector' in this.$refs.renameFileModal.$el) {
+          clearInterval(awaitPopupOpen);
+          this.$refs.renameFileModal.$el.querySelector('input').focus();
+        }
+      }, 5)
     },
     /**
      * Send request to remove files or folders

@@ -18,10 +18,10 @@
           <table class="commander-file-list">
             <thead>
             <tr>
-              <TableHeadCol  name="Name" type="name" :panel="panels.active" @setOrder="orderBy"/>
-              <TableHeadCol  name="Ext" type="ext" :panel="panels.active" @setOrder="orderBy"/>
-              <TableHeadCol  name="Size" type="size" :panel="panels.active" @setOrder="orderBy"/>
-              <TableHeadCol  name="Date" type="ctime" :panel="panels.active" @setOrder="orderBy"/>
+              <TableHeadCol name="Name" type="name" :panel="panels.active" @setOrder="orderBy"/>
+              <TableHeadCol name="Ext" type="ext" :panel="panels.active" @setOrder="orderBy"/>
+              <TableHeadCol name="Size" type="size" :panel="panels.active" @setOrder="orderBy"/>
+              <TableHeadCol name="Date" type="ctime" :panel="panels.active" @setOrder="orderBy"/>
             </tr>
             </thead>
             <tbody v-if="panels[panel].bookmarks.length">
@@ -164,21 +164,27 @@ export default {
      * @param by
      */
     orderBy(by) {
-      const bookmark = this.getBookmark(this.panels.active)
+      const bookmark = this.getBookmark(this.panels.active);
       const order = bookmark.filters.order;
       if (by === order.by) {
-        order.dir = !order.dir
+        order.dir = !order.dir;
       } else {
         order.by = by;
       }
-      this.getContent(bookmark.path, order).then(files => {bookmark.files.list = files})
+      this.getContent(bookmark.path, order).then(files => {
+        bookmark.files.list = files;
+      });
     },
     /**
      * Check is any of popup is open
      * @returns {boolean}
      */
     popupIsOpen() {
-      return this.$refs.bookmarkContextMenu.show || this.$refs.deleteModal.show || this.$refs.renameTabModal.show || this.$refs.fileInfo.show;
+      return this.$refs.bookmarkContextMenu.show
+        || this.$refs.deleteModal.show
+        || this.$refs.fileInfo.show
+        || this.$refs.renameFileModal.show
+        || this.$refs.renameTabModal.show;
     },
     /**
      * Select row click
@@ -216,29 +222,20 @@ export default {
      */
     scrollToElement(i, e) {
       // File list container
-      const box = e.target.querySelector('.file-browser-commander-panel-wrap.active .commander-file-list-content');
-      // Target row
-      const elem = box.querySelectorAll('.commander-file-list-row')[i];
+      const box = e.target.querySelector('.file-browser-commander-panel-wrap.active .commander-file-list-wrap');
       // Figure out current element position
-      const current = i * elem.offsetHeight - (box.offsetHeight - 60);
-      // Moving up point
-      const upPoint = box.scrollTop - box.offsetHeight + 150;
-      // Moving down event
-      current > box.scrollTop && elem.scrollIntoView(true);
-      // Moving up event
-      current < upPoint
-      && null !== elem.previousSibling.previousSibling
-      && typeof elem.previousSibling.previousSibling.scrollIntoView !== 'undefined'
-      && elem.previousSibling.previousSibling.scrollIntoView(true);
-
-      current < upPoint && i === 0 && elem.scrollIntoView(true);
+      const current = i * box.querySelectorAll('tbody tr')[i].offsetHeight;
+      // Moving event
+      if (current > box.offsetHeight - 200 || current < box.scrollTop) {
+        box.scrollTop = current;
+      }
     }
   },
   beforeMount() {
     this.getContent('/', {by: 'name', dir: false}).then(files => {
       this.panels.left.bookmarks.push(this.defaultBookmark(files, true));
       this.panels.right.bookmarks.push(this.defaultBookmark(files, true));
-    })
+    });
   },
   mounted() {
     // Change panel with 'tab' press
@@ -253,6 +250,7 @@ export default {
         'backspace',
         'delete',
         'end',
+        'enter',
         'escape',
         'home',
         'pagedown',
@@ -261,22 +259,20 @@ export default {
         ' '
       ];
       console.log(key);
-      if (allowedKeys.indexOf(key) >= 0) {
+      if (!this.popupIsOpen() && allowedKeys.indexOf(key) >= 0) {
         e.preventDefault();
         const bookmark = this.getBookmark(this.panels.active);
 
         switch (key) {
           // Press space to highlight or remove insertion, and get size if item is a folder
           case ' ':
-            if (!this.popupIsOpen()) {
-              this.insertRow(bookmark);
-              const file = bookmark.files.list[bookmark.files.selected];
-              // Get folder size
-              file.isDir && this.request(Object.assign(
-                this.routes.size,
-                {data: {path: file.path + file.basename}}
-              )).then(response => 200 === response.status && (file.size = response.data.size));
-            }
+            this.insertRow(bookmark);
+            const file = bookmark.files.list[bookmark.files.selected];
+            // Get folder size
+            file.isDir && this.request(Object.assign(
+              this.routes.size,
+              {data: {path: file.path + file.basename}}
+            )).then(response => 200 === response.status && (file.size = response.data.size));
             break;
           // Move down with "arrow down" press
           case 'arrowdown':
@@ -291,12 +287,10 @@ export default {
           // Move into the folder with "arrow right" press
           case 'arrowleft':
           case 'backspace':
-            if (!this.popupIsOpen() && !bookmark.locked && bookmark.files.depth > 0) {
-              this.folderContent(bookmark, bookmark.files.list[0]);
-            }
+            !bookmark.locked && bookmark.files.depth > 0 && this.folderContent(bookmark, bookmark.files.list[0])
             break;
           case 'arrowright':
-            if (!this.popupIsOpen() && !bookmark.locked) {
+            if (!bookmark.locked) {
               const file = bookmark.files.list[bookmark.files.selected];
               file.isDir && this.folderContent(bookmark, file);
             }
@@ -310,11 +304,13 @@ export default {
             }
             this.moveToEnd(bookmark, e);
             break;
-          // Close modals on "esc"
-          case 'escape':
-            if (this.popupIsOpen()) {
-              for (let modal of ['bookmarkContextMenu', 'deleteModal', 'renameTabModal', 'fileInfo']) {
-                this.$refs[modal].show = false;
+          case 'enter':
+            if (!this.popupIsOpen()) {
+              const file = bookmark.files.list[bookmark.files.selected];
+              if (e.altKey) {
+                this.fileInfo(file);
+              } else if (file.isDir && !bookmark.locked) {
+                this.folderContent(bookmark, file);
               }
             }
             break;
@@ -359,28 +355,28 @@ export default {
       switch (key) {
         // Remove file or folder with "delete" key
         case 'delete':
-          const items = bookmark.files.inserted.length ? bookmark.files.inserted : [bookmark.files.selected];
-          const caption = items.length > 1
-            ? `${items.length} selected files/folders?` + items.reduce((sum, cur) => sum + `<p>${bookmark.files.list[cur].basename}</p>`, '')
-            : `selected "${bookmark.files.list[items[0]].basename}"?`;
-          this.$refs.deleteModal.data = {
-            items: items,
-            panel: this.panels.active
-          };
-          this.$refs.deleteModal.caption = `Do you really want to remove ${caption}`;
-          this.$refs.deleteModal.show = true;
+          if (!this.popupIsOpen()) {
+            const items = bookmark.files.inserted.length ? bookmark.files.inserted : [bookmark.files.selected];
+            const caption = items.length > 1
+              ? `${items.length} selected files/folders?` + items.reduce((sum, cur) => sum + `<p>${bookmark.files.list[cur].basename}</p>`, '')
+              : `selected "${bookmark.files.list[items[0]].basename}"?`;
+            this.$refs.deleteModal.data = {
+              items: items,
+              panel: this.panels.active
+            };
+            this.$refs.deleteModal.caption = `Do you really want to remove ${caption}`;
+            this.$refs.deleteModal.show = true;
+          }
           break;
         // Highlight inserted row
         case 'insert':
           this.insertRow(bookmark).moveDown(bookmark, e);
           break;
-        case 'enter':
-          if (!this.popupIsOpen()) {
-            const file = bookmark.files.list[bookmark.files.selected];
-            if (e.altKey) {
-              this.fileInfo(file);
-            } else if (file.isDir && !bookmark.locked) {
-              this.folderContent(bookmark, file);
+        // Close modals on "esc"
+        case 'escape':
+          if (this.popupIsOpen()) {
+            for (let modal of ['bookmarkContextMenu', 'deleteModal', 'renameFileModal', 'renameTabModal', 'fileInfo']) {
+              this.$refs[modal].show = false;
             }
           }
           break;
