@@ -1,5 +1,14 @@
 <template>
   <div class="file-browser-wrap">
+    <input
+      class="ready"
+      multiple
+      ref="fileUpload"
+      style="display: none"
+      type="file"
+      @cancel="onFileChanged"
+      @change="onFileChanged"
+    >
     <div class="top-panel-wrap">
       <ul>
         <li v-for="(button, name) in topPanelButtons" :class="{active: name === view.active}">
@@ -18,11 +27,11 @@
       <input class="path-input" name="path" value="/" v-if="view.active === 'list'"/>
     </div>
 
-    <TreeView v-if="view.active === 'tree'" :routes="routes"/>
+    <TreeView v-if="view.active === 'tree'" :routes="routes" ref="treeView"/>
 
-    <ListView v-if="view.active === 'list'" :routes="routes"/>
+    <ListView v-if="view.active === 'list'" :routes="routes" ref="listView"/>
 
-    <CommanderView v-if="view.active === 'commander'" :routes="routes"/>
+    <CommanderView v-if="view.active === 'commander'" :routes="routes" ref="commanderView"/>
   </div>
 </template>
 
@@ -208,9 +217,9 @@ export default {
         h: this.padDate(date.getHours()),
         i: this.padDate(date.getMinutes()),
         s: this.padDate(date.getSeconds())
-      }
+      };
 
-      return `${res.d}.${res.m}.${res.y} ${res.h}:${res.i}:${res.s}`
+      return `${res.d}.${res.m}.${res.y} ${res.h}:${res.i}:${res.s}`;
     },
     /**
      * Get configuration
@@ -220,11 +229,23 @@ export default {
       return this.config;
     },
     /**
+     * File upload event listener
+     * @param e
+     */
+    onFileChanged(e) {
+      this.$refs.fileUpload.classList.add('ready');
+      const files = e.target.files;
+
+      if (this.view.active === 'commander') {
+        files.length && this.$refs.commanderView.fileUploadHandler(files);
+      }
+    },
+    /**
      * @param val
      * @returns {string}
      */
     padDate(val) {
-      return ('' + val).padStart(2, '0')
+      return ('' + val).padStart(2, '0');
     },
     /**
      * XHR request

@@ -19,11 +19,16 @@ export const FileOperationsMixin = {
      * Open file in browser
      * @param data
      */
-    fileOpen(data) {
-      const bookmark = this.getBookmark(data.panel);
-      const file = bookmark.files.list[data.i];
-      window.open(window.location.origin + this.getConfig().basePath + file.path + file.basename, '_blank');
+    fileOpen(data = {}) {
+      const bookmark = this.getBookmark('panel' in data ? data.panel : null);
+      const file = bookmark.files.list['i' in data ? data.i : bookmark.files.selected];
+      !file.isDir && window.open(window.location.origin + this.getConfig().basePath + file.path + file.basename, '_blank');
     },
+    /**
+     * Rename a folder or a file
+     * @param data
+     * @returns {boolean}
+     */
     fileRenameHandler(data) {
       const files = this.getBookmarksFiles(data.panel);
       const file = files[data.i];
@@ -56,8 +61,10 @@ export const FileOperationsMixin = {
         })
       }
     },
+    /**
+     * Open modal for the folder or the file rename
+     */
     fileRenameShowModal() {
-      console.log('querySelector' in this.$refs.renameFileModal.$el);
       this.$refs.renameFileModal.caption = 'New file name:';
       this.$refs.renameFileModal.data = {i: this.getBookmark().files.selected, panel: this.panels.active};
       this.$refs.renameFileModal.value = this.getSelected();
@@ -86,6 +93,45 @@ export const FileOperationsMixin = {
         }
         bookmark.files.inserted = [];
       });
+    },
+    /**
+     * Open file upload dialog
+     */
+    fileUploadDialogOpen() {
+      if (this.$parent.$refs.fileUpload.classList.contains('ready')) {
+        this.$parent.$refs.fileUpload.classList.remove('ready')
+        this.$parent.$refs.fileUpload.click();
+      }
+    },
+    /**
+     * Upload file handler
+     * @param files
+     * @returns {Promise}
+     */
+    fileUploadHandler(files) {
+      let requests = [];
+      const bookmark = this.getBookmark();
+      for (let i = 0, n = files.length; i < n; i++) {
+        requests.push(this.request(Object.assign(this.routes.upload, {
+          data: {
+            path: bookmark.path,
+            name: files[i].name,
+            file: files[i]
+          }
+        })))
+      }
+
+      Promise.all(requests).then(() => {
+        this.getContent(bookmark.path, bookmark.filters.order).then(files => {
+          bookmark.files = {
+            depth: bookmark.files.depth,
+            inserted: [],
+            list: this.sort(files, bookmark.filters.order),
+            order: bookmark.files.order,
+            selected: 0
+          };
+        })
+      })
     },
     /**
      * Get folder content

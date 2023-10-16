@@ -54,8 +54,8 @@
   <div class="file-browser-commands-bar-wrap">
     <ul>
       <li @click="fileRenameShowModal"><span>Rename</span></li>
-      <li><span>View</span></li>
-      <li><span>Upload</span></li>
+      <li @click="fileOpen"><span>View</span></li>
+      <li @click="fileUploadDialogOpen"><span>Upload</span></li>
       <li><span>Copy</span></li>
       <li><span>Move</span></li>
       <li><span>Folder</span></li>
@@ -252,6 +252,9 @@ export default {
         'end',
         'enter',
         'escape',
+        'f2',
+        'f3',
+        'f4',
         'home',
         'pagedown',
         'pageup',
@@ -344,6 +347,18 @@ export default {
           // Switch panel with "tab" pressing
           case 'tab':
             this.panels.active = 'left' === this.panels.active ? 'right' : 'left';
+            break;
+          // Open rename modal with "F2" pressing
+          case 'f2':
+            this.fileRenameShowModal()
+            break;
+          // Open file in a new tab with "F3" pressing
+          case 'f3':
+            this.fileOpen()
+            break;
+          // Open a file dialog window with "F4" pressing
+          case 'f4':
+            this.fileUploadDialogOpen()
             break;
         }
       }
