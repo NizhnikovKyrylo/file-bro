@@ -41,7 +41,7 @@
     background-color: $white;
     border-left: 1px solid transparent;
     border-right: 1px solid transparent;
-    max-height: 80vh;
+    height: 80vh;
     overflow: auto;
 
     .commander-file-list {
@@ -65,9 +65,9 @@
       tbody tr {
         &:nth-child(odd) {background-color: $gray}
 
-        &.inserted {color: $red}
-
         &.selected {background-color: $violet; color: $white}
+
+        &.inserted {color: $red}
       }
 
       th {

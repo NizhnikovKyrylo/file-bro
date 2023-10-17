@@ -1,5 +1,36 @@
 export const FileOperationsMixin = {
   methods: {
+    fileCopyHandler() {
+      const bookmark = this.getBookmark();
+
+      const fileIndexes = bookmark.files.inserted.length > 1 ? bookmark.files.inserted : [bookmark.files.selected];
+
+      for (let i = 0, n = fileIndexes.length; i < n; i++) {
+        if (bookmark.files.list[fileIndexes[i]].path !== this.$refs.copyFileModal.value) {
+          /// TODO
+        }
+      }
+    },
+    /**
+     * Open modal for the folder or the file copy
+     */
+    fileCopyShowModal() {
+      const bookmark = this.getBookmark();
+
+      this.$refs.copyFileModal.caption = bookmark.files.inserted.length > 1
+        ? `Copy ${bookmark.files.inserted.length} selected files/directories?`
+        : `Copy selected "${bookmark.files.list[bookmark.files.selected].basename}"?`;
+
+      const targetBookmark = this.getBookmark(this.panels.active === 'left' ? 'right' : 'left');
+      this.$refs.copyFileModal.value = targetBookmark.path;
+      this.$refs.copyFileModal.show = true;
+      const awaitPopupOpen = setInterval(() => {
+        if ('querySelector' in this.$refs.copyFileModal.$el) {
+          clearInterval(awaitPopupOpen);
+          this.$refs.copyFileModal.$el.querySelector('input').focus();
+        }
+      }, 5);
+    },
     /**
      * Show folder or file info
      * @param file
@@ -35,8 +66,8 @@ export const FileOperationsMixin = {
       // Check if renamed folder already existing
       for (let i = 0, n = files.length; i < n; i++) {
         if (files[i].isDir && files[i].basename === data.value && file.basename !== data.value) {
-          alert(`Directory "${data.value}" already exists`)
-          return false
+          alert(`Directory "${data.value}" already exists`);
+          return false;
         }
       }
 
@@ -58,7 +89,7 @@ export const FileOperationsMixin = {
             file.filename = filename.join('.');
             file.path = path;
           }
-        })
+        });
       }
     },
     /**
@@ -74,7 +105,7 @@ export const FileOperationsMixin = {
           clearInterval(awaitPopupOpen);
           this.$refs.renameFileModal.$el.querySelector('input').focus();
         }
-      }, 5)
+      }, 5);
     },
     /**
      * Send request to remove files or folders
@@ -83,23 +114,19 @@ export const FileOperationsMixin = {
     fileRemoveHandler(data) {
       const bookmark = this.getBookmark(data.panel);
       let requests = [];
+
       for (let i = 0, n = data.items.length; i < n; i++) {
         const file = bookmark.files.list[data.items[i]];
         requests.push(this.request(Object.assign(this.routes.remove, {data: {path: file.path + file.basename}})));
       }
-      Promise.all(requests).then(() => {
-        for (let i = 0, n = data.items.length; i < n; i++) {
-          bookmark.files.list.splice(data.items[i], 1);
-        }
-        bookmark.files.inserted = [];
-      });
+      Promise.all(requests).then(() => this.refreshContent(bookmark));
     },
     /**
      * Open file upload dialog
      */
     fileUploadDialogOpen() {
       if (this.$parent.$refs.fileUpload.classList.contains('ready')) {
-        this.$parent.$refs.fileUpload.classList.remove('ready')
+        this.$parent.$refs.fileUpload.classList.remove('ready');
         this.$parent.$refs.fileUpload.click();
       }
     },
@@ -109,29 +136,34 @@ export const FileOperationsMixin = {
      * @returns {Promise}
      */
     fileUploadHandler(files) {
-      let requests = [];
       const bookmark = this.getBookmark();
+      let requests = [];
+
+      this.$refs.fileQueue.caption = 'File upload queue:';
+      this.$refs.fileQueue.title = 'File uploading';
+      this.$refs.fileQueue.show = true;
+
       for (let i = 0, n = files.length; i < n; i++) {
-        requests.push(this.request(Object.assign(this.routes.upload, {
-          data: {
-            path: bookmark.path,
-            name: files[i].name,
-            file: files[i]
-          }
-        })))
+        this.$refs.fileQueue.files.push({name: files[i].name, progress: 0});
+        const initSize = files[i].size;
+        requests.push(
+          this.request(
+            Object.assign(this.routes.upload, {
+              data: {
+                path: bookmark.path,
+                name: files[i].name,
+                file: files[i]
+              },
+              onUploadProgress: progressEvent => {
+                let progress = parseInt((progressEvent.loaded / initSize) * 100)
+                this.$refs.fileQueue.files[i].progress = progress > 100 ? 100 : progress;
+              }
+            }))
+            .catch(error => alert(`Cannot upload file "${files[i].name}". Reason: ${error.response.statusText}`))
+        );
       }
 
-      Promise.all(requests).then(() => {
-        this.getContent(bookmark.path, bookmark.filters.order).then(files => {
-          bookmark.files = {
-            depth: bookmark.files.depth,
-            inserted: [],
-            list: this.sort(files, bookmark.filters.order),
-            order: bookmark.files.order,
-            selected: 0
-          };
-        })
-      })
+      Promise.all(requests).then(() => this.refreshContent(bookmark));
     },
     /**
      * Get folder content
@@ -188,6 +220,29 @@ export const FileOperationsMixin = {
       const bookmark = this.getBookmark(panel, bookmarkIndex);
       null === fileIndex && (fileIndex = bookmark.files.selected);
       return bookmark.files.list[fileIndex].basename;
+    },
+    /**
+     * Refresh the active bookmark content
+     * @param bookmark
+     */
+    refreshContent(bookmark) {
+      this.getContent(bookmark.path, bookmark.filters.order).then(files => {
+        // Bookmark files structure
+        const bookmarkFiles = {
+          depth: bookmark.files.depth,
+          inserted: [],
+          list: this.sort(files, bookmark.filters.order),
+          order: bookmark.files.order,
+          selected: 0
+        };
+        // Set files to the current bookmark
+        bookmark.files = bookmarkFiles;
+        const otherBookmark = this.getBookmark(this.panels.active === 'left' ? 'right' : 'left');
+        // Set the same file structure if the left and right bookmarks has the same path
+        if (bookmark.path === otherBookmark.path) {
+          otherBookmark.files = bookmarkFiles;
+        }
+      })
     },
     /**
      * Sort files

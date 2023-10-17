@@ -45,23 +45,10 @@
   }
 
   .modal-body {padding: 15px}
-}
 
-.input-modal-wrap {
-  .input-modal-caption {font-size: 14px}
+  .modal-caption {font-size: 14px}
 
-  .input-modal-text {
-    margin: 5px 0;
-    width: 100%;
-
-    input {
-      border-radius: 5px;
-      padding: 8px;
-      width: 100%;
-    }
-  }
-
-  .input-modal-controls {
+  .modal-controls {
     align-items: center;
     display: flex;
     justify-content: flex-end;
@@ -80,10 +67,68 @@
   }
 }
 
+.input-modal-wrap {
+  .input-modal-text {
+    margin: 5px 0;
+    width: 100%;
+
+    input {
+      border-radius: 5px;
+      padding: 8px;
+      width: 100%;
+    }
+  }
+}
+
 .file-info-modal-wrap {
   .file-info-properties td {padding: 5px 20px}
 
   .file-info-properties td:first-child {text-align: right}
 
   .file-info-properties .file-browser-icon {height: 30px; width: 30px}
+}
+
+.file-queue-modal {
+  background-color: $gray;
+
+ .file-queue-modal-list {
+   margin-top: 10px;
+   max-height: 400px;
+   overflow-x: hidden;
+   overflow-y: auto;
+
+   li {
+     align-items: center;
+     background-color: $white;
+     display: flex;
+     justify-content: space-between;
+     margin-bottom: 1px;
+
+     .file-queue-modal-filename {
+       font-size: 14px;
+       padding: 6px 15px;
+     }
+
+     .file-queue-modal-progress {
+       border: 1px solid $dark;
+       position: relative;
+       width: 120px;
+     }
+
+     .file-queue-modal-progress-bar {
+       background-color: $violet;
+       height: 20px;
+     }
+
+     .file-queue-modal-progress-text {
+       font-size: 14px;
+       line-height: 20px;
+       position: absolute;
+       right: 0;
+       text-align: center;
+       top: 0;
+       width: 100%;
+     }
+   }
+ }
 }

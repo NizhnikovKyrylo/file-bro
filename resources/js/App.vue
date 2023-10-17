@@ -266,7 +266,14 @@ export default {
         "content-type": props.method === "patch" || props.method === "delete" ? "application/x-www-form-urlencoded" : "multipart/form-data"
       }, props.headers || {});
 
-      return axios(props);
+      let config = null;
+      if (props.hasOwnProperty('onUploadProgress')) {
+        config = {
+          onUploadProgress: props.onUploadProgress
+        }
+      }
+
+      return null === config ? axios(props) : axios(props, config);
     },
     /**
      * File array sort function

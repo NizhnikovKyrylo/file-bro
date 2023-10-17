@@ -40,9 +40,9 @@
             <tfoot>
             <tr>
               <td colspan="4">
-                files: {{ countFiles(this.getBookmarksFiles(panel), false) }};
+                files: {{ countFiles(getBookmarksFiles(panel), false) }};
                 &nbsp;&nbsp;&nbsp;&nbsp;
-                folders: {{ countFiles(this.getBookmarksFiles(panel)) }};
+                folders: {{ countFiles(getBookmarksFiles(panel)) - (getBookmark()?.files?.depth > 0 ? 1 : 0) }};
               </td>
             </tr>
             </tfoot>
@@ -56,7 +56,7 @@
       <li @click="fileRenameShowModal"><span>Rename</span></li>
       <li @click="fileOpen"><span>View</span></li>
       <li @click="fileUploadDialogOpen"><span>Upload</span></li>
-      <li><span>Copy</span></li>
+      <li @click="fileCopyShowModal"><span>Copy</span></li>
       <li><span>Move</span></li>
       <li><span>Folder</span></li>
       <li><span>Delete</span></li>
@@ -85,6 +85,12 @@
   />
 
   <InputModal
+    ref="copyFileModal"
+    title="Copy file(s)"
+    @apply="fileCopyHandler"
+  />
+
+  <InputModal
     ref="deleteModal"
     title="Remove file/directory"
     :hideInput="true"
@@ -92,6 +98,8 @@
   />
 
   <FileInfoModal ref="fileInfo"/>
+
+  <FileQueueModal ref="fileQueue"/>
 </template>
 
 <script>
@@ -104,9 +112,10 @@ import {BookmarkMixin} from "./commander/mixins/bookmark-mixin.js";
 import {MovingMixin} from "./commander/mixins/moving-mixin.js";
 import {FileOperationsMixin} from "./commander/mixins/file-operations-mixin.js";
 import TableHeadCol from "./commander/TableHeadCol.vue";
+import FileQueueModal from "./default-components/FileQueueModal.vue";
 
 export default {
-  components: {TableHeadCol, BookmarkElement, BookmarkContextMenu, FileInfoModal, InputModal, ListRow},
+  components: {FileQueueModal, TableHeadCol, BookmarkElement, BookmarkContextMenu, FileInfoModal, InputModal, ListRow},
   data() {
     return {
       header: [
@@ -181,8 +190,10 @@ export default {
      */
     popupIsOpen() {
       return this.$refs.bookmarkContextMenu.show
+        || this.$refs.copyFileModal.show
         || this.$refs.deleteModal.show
         || this.$refs.fileInfo.show
+        || this.$refs.fileQueue.show
         || this.$refs.renameFileModal.show
         || this.$refs.renameTabModal.show;
     },
@@ -390,7 +401,7 @@ export default {
         // Close modals on "esc"
         case 'escape':
           if (this.popupIsOpen()) {
-            for (let modal of ['bookmarkContextMenu', 'deleteModal', 'renameFileModal', 'renameTabModal', 'fileInfo']) {
+            for (let modal of ['bookmarkContextMenu', 'copyFileModal', 'deleteModal', 'fileInfo', 'renameFileModal', 'renameTabModal']) {
               this.$refs[modal].show = false;
             }
           }

@@ -287,25 +287,38 @@ class FileBrowserController extends Controller
         $args = $request->validated();
         // Get restricted file extensions and mimetypes
         $restricted = array_flip(config('file-browser.restricted'));
+        // Original file name
+        $original_filename = $args['file']->getClientOriginalName();
         // Get file extension
-        $ext = $args['file']->guessExtension();
+        try {
+            $ext = $args['file']->guessExtension();
+        } catch (\Exception) {
+            $ext = null;
+        } finally {
+            if (is_null($ext)) {
+                $ext = pathinfo($original_filename, PATHINFO_EXTENSION);
+            }
+        }
+
+        // Check if new file name exists or set original name
+        $filename = $this->escapeName(!empty($args['name']) && $args['name'] !== $original_filename
+            ? substr($args['name'], 0, strrpos($args['name'], '.'))
+            : substr($original_filename, 0, strrpos($original_filename, '.')));
+
         // Check if file extension or mimetype is restricted
         if (isset($restricted[$args['file']->getMimeType()]) || isset($restricted[$ext])) {
             return response()->json([
                 'errors' => [self::FILE_BROWSER_RESTRICTED]
             ], 403);
         }
-        // Original file name
-        $filename = $args['file']->getClientOriginalName();
-        // Check if new file name exists or set original name
-        $name = $this->escapeName($args['name'] ?? substr($filename, 0, strrpos($filename, '.'))) . '.' . $ext;
+
         try {
             // Move file to the destination folder
             return response()->json(
                 $this->instanceInfo(
                     $args['file']->move(
                         $this->createFolder($this->fullPath($args['path'])),
-                        $name
+                        $filename . '.' . $ext
                     )
                 ),
                 201
