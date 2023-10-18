@@ -45,8 +45,14 @@ export default {
      * Press OK button
      */
     apply() {
-      this.$emit('apply', Object.assign(this.data, {value: this.value}))
-      this.close()
+      let allow = true
+      if (!this.hideInput) {
+        allow = typeof this.value === 'string' ? this.value.trim().length > 0 : false
+      }
+      if (allow) {
+        this.$emit('apply', Object.assign(this.data, {value: this.value}))
+        this.close()
+      }
     },
     /**
      * Reset modal values and hide

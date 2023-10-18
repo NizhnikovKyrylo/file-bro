@@ -50,10 +50,10 @@ export const FileOperationsMixin = {
           title: 'File copying'
         },
         (bookmark, otherBookmark) => {
-          this.refreshContent(bookmark)
-          this.refreshContent(otherBookmark)
+          this.refreshContent(bookmark);
+          this.refreshContent(otherBookmark);
         }
-      )
+      );
     },
     /**
      * Open modal for the folder or the file copy
@@ -271,6 +271,34 @@ export const FileOperationsMixin = {
           selected: 0
         };
       });
+    },
+    /**
+     * Create folder handler
+     * @param data
+     */
+    folderCreateHandler(data) {
+      const bookmark = this.getBookmark();
+
+      this.request(Object.assign(this.routes.create, {
+        data: {
+          path: bookmark.path + data.value
+        }
+      })).then(response => 201 === response.status && this.refreshContent(bookmark))
+    },
+    /**
+     * Show the folder creation array
+     */
+    folderCreateShowModal() {
+      this.$refs.createFolderModal.caption = 'Input new directory name:';
+      this.$refs.createFolderModal.value = [];
+      this.$refs.createFolderModal.show = true;
+
+      const awaitPopupOpen = setInterval(() => {
+        if ('querySelector' in this.$refs.createFolderModal.$el) {
+          clearInterval(awaitPopupOpen);
+          this.$refs.createFolderModal.$el.querySelector('input').focus();
+        }
+      }, 5);
     },
     /**
      * Open folder

@@ -58,7 +58,7 @@
       <li @click="fileUploadDialogOpen"><span>Upload F4</span></li>
       <li @click="fileCopyShowModal"><span>Copy F5</span></li>
       <li @click="fileMoveShowModal"><span>Move F6</span></li>
-      <li><span>Folder F7</span></li>
+      <li @click="folderCreateShowModal"><span>Folder F7</span></li>
       <li><span>Delete F8</span></li>
     </ul>
   </div>
@@ -73,21 +73,15 @@
   />
 
   <InputModal
-    ref="renameTabModal"
-    title="Rename tab"
-    @apply="bookmarkRenameHandler"
-  />
-
-  <InputModal
-    ref="renameFileModal"
-    title="Rename file"
-    @apply="fileRenameHandler"
-  />
-
-  <InputModal
     ref="copyFileModal"
     title="Copy file(s)"
     @apply="fileCopyHandler"
+  />
+
+  <InputModal
+    ref="createFolderModal"
+    title="Create new directory"
+    @apply="folderCreateHandler"
   />
 
   <InputModal
@@ -101,6 +95,18 @@
     ref="moveFileModal"
     title="Move file(s)"
     @apply="fileMoveHandler"
+  />
+
+  <InputModal
+    ref="renameFileModal"
+    title="Rename file"
+    @apply="fileRenameHandler"
+  />
+
+  <InputModal
+    ref="renameTabModal"
+    title="Rename tab"
+    @apply="bookmarkRenameHandler"
   />
 
   <FileInfoModal ref="fileInfo"/>
@@ -197,9 +203,11 @@ export default {
     popupIsOpen() {
       return this.$refs.bookmarkContextMenu.show
         || this.$refs.copyFileModal.show
+        || this.$refs.createFolderModal.show
         || this.$refs.deleteModal.show
         || this.$refs.fileInfo.show
         || this.$refs.fileQueue.show
+        || this.$refs.moveFileModal.show
         || this.$refs.renameFileModal.show
         || this.$refs.renameTabModal.show;
     },
@@ -273,13 +281,15 @@ export default {
         switch (key) {
           // Press space to highlight or remove insertion, and get size if item is a folder
           case ' ':
-            this.insertRow(bookmark);
-            const file = bookmark.files.list[bookmark.files.selected];
-            // Get folder size
-            file.isDir && this.request(Object.assign(
-              this.routes.size,
-              {data: {path: file.path + file.basename}}
-            )).then(response => 200 === response.status && (file.size = response.data.size));
+            if (!this.popupIsOpen()) {
+              this.insertRow(bookmark);
+              const file = bookmark.files.list[bookmark.files.selected];
+              // Get folder size
+              file.isDir && this.request(Object.assign(
+                this.routes.size,
+                {data: {path: file.path + file.basename}}
+              )).then(response => 200 === response.status && (file.size = response.data.size));
+            }
             break;
           // Move down with "arrow down" press
           case 'arrowdown':
@@ -371,6 +381,10 @@ export default {
           // Open the move files modal with "F6" pressing
           case 'f6':
             this.fileMoveShowModal();
+            break;
+          // Open the creation folder modal with "F7" pressing
+          case 'f7':
+            this.folderCreateShowModal();
             break;
         }
       }
