@@ -39,7 +39,7 @@
     - ~~rename, F2~~
     - ~~view file, F3~~
     - ~~upload file, F4~~
-    - copy, F5
+    - ~~copy, F5~~
     - move, F6
     - create folder, F7
     - remove, F8
@@ -57,6 +57,8 @@
     - paste
     - ========
     - show file properties
+- Select All files
+- Unselect all files
 - Pack
 - Unpack
 - Search

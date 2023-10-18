@@ -1,13 +1,25 @@
 export const FileOperationsMixin = {
   methods: {
+    /**
+     * Copy a file or a folder
+     */
     fileCopyHandler() {
       const bookmark = this.getBookmark();
+
+      const otherBookmark = this.getBookmark(this.panels.active === 'left' ? 'right' : 'left');
 
       const fileIndexes = bookmark.files.inserted.length > 1 ? bookmark.files.inserted : [bookmark.files.selected];
 
       for (let i = 0, n = fileIndexes.length; i < n; i++) {
         if (bookmark.files.list[fileIndexes[i]].path !== this.$refs.copyFileModal.value) {
-          /// TODO
+          const file = bookmark.files.list[fileIndexes[i]];
+
+          this.request(Object.assign(this.routes.copy, {
+            data: {
+              from: file.path + file.basename,
+              to: otherBookmark.path
+            }
+          })).then(() => this.refreshContent(otherBookmark));
         }
       }
     },
@@ -155,7 +167,7 @@ export const FileOperationsMixin = {
                 file: files[i]
               },
               onUploadProgress: progressEvent => {
-                let progress = parseInt((progressEvent.loaded / initSize) * 100)
+                let progress = parseInt((progressEvent.loaded / initSize) * 100);
                 this.$refs.fileQueue.files[i].progress = progress > 100 ? 100 : progress;
               }
             }))
@@ -242,7 +254,7 @@ export const FileOperationsMixin = {
         if (bookmark.path === otherBookmark.path) {
           otherBookmark.files = bookmarkFiles;
         }
-      })
+      });
     },
     /**
      * Sort files

@@ -266,6 +266,10 @@ export default {
         'f2',
         'f3',
         'f4',
+        'f5',
+        'f6',
+        'f7',
+        'f8',
         'home',
         'pagedown',
         'pageup',
@@ -359,7 +363,7 @@ export default {
           case 'tab':
             this.panels.active = 'left' === this.panels.active ? 'right' : 'left';
             break;
-          // Open rename modal with "F2" pressing
+          // Open the rename modal with "F2" pressing
           case 'f2':
             this.fileRenameShowModal()
             break;
@@ -371,6 +375,9 @@ export default {
           case 'f4':
             this.fileUploadDialogOpen()
             break;
+          // Open the copy modal with "F5" pressing
+          case 'f5':
+            this.fileCopyShowModal()
         }
       }
     };
