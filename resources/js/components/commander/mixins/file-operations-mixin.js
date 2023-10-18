@@ -202,6 +202,22 @@ export const FileOperationsMixin = {
       Promise.all(requests).then(() => this.refreshContent(bookmark));
     },
     /**
+     * Show the file remove modal
+     */
+    fileRemoveShowModal() {
+      const bookmark = this.getBookmark();
+      const items = bookmark.files.inserted.length ? bookmark.files.inserted : [bookmark.files.selected];
+      const caption = items.length > 1
+        ? `${items.length} selected files/folders?` + items.reduce((sum, cur) => sum + `<p>${bookmark.files.list[cur].basename}</p>`, '')
+        : `selected "${bookmark.files.list[items[0]].basename}"?`;
+      this.$refs.deleteModal.data = {
+        items: items,
+        panel: this.panels.active
+      };
+      this.$refs.deleteModal.caption = `Do you really want to remove ${caption}`;
+      this.$refs.deleteModal.show = true;
+    },
+    /**
      * Open file upload dialog
      */
     fileUploadDialogOpen() {
@@ -283,7 +299,7 @@ export const FileOperationsMixin = {
         data: {
           path: bookmark.path + data.value
         }
-      })).then(response => 201 === response.status && this.refreshContent(bookmark))
+      })).then(response => 201 === response.status && this.refreshContent(bookmark));
     },
     /**
      * Show the folder creation array

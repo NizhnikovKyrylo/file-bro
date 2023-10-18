@@ -46,7 +46,11 @@
 
   .modal-body {padding: 15px}
 
-  .modal-caption {font-size: 14px}
+  .modal-caption {
+    font-size: 14px;
+    max-height: 300px;
+    overflow-y: auto;
+  }
 
   .modal-controls {
     align-items: center;
