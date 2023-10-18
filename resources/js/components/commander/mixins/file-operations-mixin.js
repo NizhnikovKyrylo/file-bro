@@ -1,27 +1,59 @@
 export const FileOperationsMixin = {
   methods: {
     /**
-     * Copy a file or a folder
+     * Handle a file moving or copying
+     * @param route
+     * @param popupData
+     * @param callback
      */
-    fileCopyHandler() {
+    copyOrMoveHandle(route, popupData, callback) {
       const bookmark = this.getBookmark();
 
       const otherBookmark = this.getBookmark(this.panels.active === 'left' ? 'right' : 'left');
 
       const fileIndexes = bookmark.files.inserted.length > 1 ? bookmark.files.inserted : [bookmark.files.selected];
 
+      let requests = [];
+
+      this.$refs.fileQueue.caption = popupData.caption;
+      this.$refs.fileQueue.title = popupData.title;
+      this.$refs.fileQueue.show = true;
+
       for (let i = 0, n = fileIndexes.length; i < n; i++) {
         if (bookmark.files.list[fileIndexes[i]].path !== this.$refs.copyFileModal.value) {
           const file = bookmark.files.list[fileIndexes[i]];
 
-          this.request(Object.assign(this.routes.copy, {
+          this.$refs.fileQueue.files.push({name: file.basename, progress: 0});
+
+          requests.push(this.request(Object.assign(route, {
             data: {
               from: file.path + file.basename,
               to: otherBookmark.path
+            },
+            onUploadProgress: () => {
+              this.$refs.fileQueue.files[i].progress = 100;
             }
-          })).then(() => this.refreshContent(otherBookmark));
+          })));
         }
       }
+
+      Promise.all(requests).then(() => callback(bookmark, otherBookmark));
+    },
+    /**
+     * Copy a file or a folder
+     */
+    fileCopyHandler() {
+      this.copyOrMoveHandle(
+        this.routes.copy,
+        {
+          caption: 'File copy queue:',
+          title: 'File copying'
+        },
+        (bookmark, otherBookmark) => {
+          this.refreshContent(bookmark)
+          this.refreshContent(otherBookmark)
+        }
+      )
     },
     /**
      * Open modal for the folder or the file copy
@@ -57,6 +89,42 @@ export const FileOperationsMixin = {
         }
         this.$refs.fileInfo.show = true;
       });
+    },
+    /**
+     * Move a file or a folder
+     */
+    fileMoveHandler() {
+      this.copyOrMoveHandle(
+        this.routes.move,
+        {
+          caption: 'File move queue:',
+          title: 'File moving'
+        },
+        (bookmark, otherBookmark) => {
+          this.refreshContent(bookmark);
+          this.refreshContent(otherBookmark);
+        }
+      );
+    },
+    /**
+     * Open modal for the folder or the file move
+     */
+    fileMoveShowModal() {
+      const bookmark = this.getBookmark();
+
+      this.$refs.moveFileModal.caption = bookmark.files.inserted.length > 1
+        ? `Copy ${bookmark.files.inserted.length} selected files/directories?`
+        : `Copy selected "${bookmark.files.list[bookmark.files.selected].basename}"?`;
+
+      const targetBookmark = this.getBookmark(this.panels.active === 'left' ? 'right' : 'left');
+      this.$refs.moveFileModal.value = targetBookmark.path;
+      this.$refs.moveFileModal.show = true;
+      const awaitPopupOpen = setInterval(() => {
+        if ('querySelector' in this.$refs.moveFileModal.$el) {
+          clearInterval(awaitPopupOpen);
+          this.$refs.moveFileModal.$el.querySelector('input').focus();
+        }
+      }, 5);
     },
     /**
      * Open file in browser
@@ -254,6 +322,8 @@ export const FileOperationsMixin = {
         if (bookmark.path === otherBookmark.path) {
           otherBookmark.files = bookmarkFiles;
         }
+
+        bookmark.files.inserted = [];
       });
     },
     /**

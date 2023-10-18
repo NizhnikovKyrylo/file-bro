@@ -40,7 +40,7 @@
     - ~~view file, F3~~
     - ~~upload file, F4~~
     - ~~copy, F5~~
-    - move, F6
+    - ~~move, F6~~
     - create folder, F7
     - remove, F8
   - context menu

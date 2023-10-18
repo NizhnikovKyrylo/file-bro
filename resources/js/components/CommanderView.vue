@@ -53,13 +53,13 @@
   </div>
   <div class="file-browser-commands-bar-wrap">
     <ul>
-      <li @click="fileRenameShowModal"><span>Rename</span></li>
-      <li @click="fileOpen"><span>View</span></li>
-      <li @click="fileUploadDialogOpen"><span>Upload</span></li>
-      <li @click="fileCopyShowModal"><span>Copy</span></li>
-      <li><span>Move</span></li>
-      <li><span>Folder</span></li>
-      <li><span>Delete</span></li>
+      <li @click="fileRenameShowModal"><span>Rename F2</span></li>
+      <li @click="fileOpen"><span>View F3</span></li>
+      <li @click="fileUploadDialogOpen"><span>Upload F4</span></li>
+      <li @click="fileCopyShowModal"><span>Copy F5</span></li>
+      <li @click="fileMoveShowModal"><span>Move F6</span></li>
+      <li><span>Folder F7</span></li>
+      <li><span>Delete F8</span></li>
     </ul>
   </div>
 
@@ -95,6 +95,12 @@
     title="Remove file/directory"
     :hideInput="true"
     @apply="fileRemoveHandler"
+  />
+
+  <InputModal
+    ref="moveFileModal"
+    title="Move file(s)"
+    @apply="fileMoveHandler"
   />
 
   <FileInfoModal ref="fileInfo"/>
@@ -254,27 +260,10 @@ export default {
       const key = e.key.toLowerCase();
 
       const allowedKeys = [
-        'arrowup',
-        'arrowright',
-        'arrowdown',
-        'arrowleft',
-        'backspace',
-        'delete',
-        'end',
-        'enter',
-        'escape',
-        'f2',
-        'f3',
-        'f4',
-        'f5',
-        'f6',
-        'f7',
-        'f8',
-        'home',
-        'pagedown',
-        'pageup',
-        'tab',
-        ' '
+        'arrowup', 'arrowright', 'arrowdown', 'arrowleft', 'home', 'end', 'pageup', 'pagedown',
+        'backspace', 'enter', 'tab', ' ',
+        'delete', 'escape',
+        'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8',
       ];
       console.log(key);
       if (!this.popupIsOpen() && allowedKeys.indexOf(key) >= 0) {
@@ -375,9 +364,14 @@ export default {
           case 'f4':
             this.fileUploadDialogOpen()
             break;
-          // Open the copy modal with "F5" pressing
+          // Open the copy files modal with "F5" pressing
           case 'f5':
             this.fileCopyShowModal()
+            break;
+          // Open the move files modal with "F6" pressing
+          case 'f6':
+            this.fileMoveShowModal();
+            break;
         }
       }
     };
