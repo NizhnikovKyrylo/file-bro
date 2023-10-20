@@ -2,6 +2,7 @@
   <tr
     :class="{inserted: inserted, selected: selected}"
     @click="select"
+    @contextmenu="openContextMenu"
     @dblclick="open"
   >
     <td :title="fullName">
@@ -24,7 +25,7 @@
 
 <script>
 export default {
-  emits: ['openDir', 'openFile', 'selectRow'],
+  emits: ['openDir', 'openFile', 'rowContextMenu', 'selectRow'],
   computed: {
     fullName() {
       return this.file.ext.length ? this.file.filename + '.' + this.file.ext : this.file.filename
@@ -59,14 +60,21 @@ export default {
   },
   methods: {
     /**
-     * Double click event
+     * Mouse double click event
      */
     open() {
       this.file.isDir && this.$emit('openDir', {i: this.index, panel: this.panel})
       !this.file.isDir && this.$emit('openFile', {i: this.index, panel: this.panel})
     },
     /**
-     * Click row event
+     * Mouse right click
+     */
+    openContextMenu(e) {
+      e.preventDefault()
+      this.$emit('rowContextMenu', {event: e, i: this.index, panel: this.panel})
+    },
+    /**
+     * Mouse click row event
      * @param e
      */
     select(e) {

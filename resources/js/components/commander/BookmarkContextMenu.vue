@@ -1,5 +1,5 @@
 <template>
-  <ul class="bookmark-context-menu" v-if="show" :style="{left: left + 'px'}" v-click-out-side="() => {show = false}">
+  <ul class="context-menu" v-if="show" :style="{left: left + 'px'}" v-click-out-side="() => {show = false}">
     <li @click="create"><span>New</span></li>
     <li @click="copy"><span>Copy</span></li>
     <li @click="rename"><span>Rename</span></li>

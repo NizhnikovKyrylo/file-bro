@@ -1,11 +1,13 @@
-.bookmark-context-menu {
+.context-menu {
   background-color: $white;
-  border: 1px solid $black;
+  border: 1px solid $gray;
   position: fixed;
   top: 125px;
   z-index: 10;
 
+  .separator {border-bottom: 1px solid $gray}
+
   li span {display: block; padding: 5px 15px}
 
-  li:hover span {background-color: $gray; cursor: pointer}
+  li:hover span {background-color: $lightGray; cursor: pointer}
 }

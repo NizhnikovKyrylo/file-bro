@@ -33,6 +33,7 @@
               :selected="panels.active === panel && i === panels[panel].bookmarks[panels[panel].shownBookmarkIndex].files.selected"
               :panel="panel"
               @selectRow="rowSelected"
+              @rowContextMenu="openRowContextMenu"
               @openDir="folderOpen"
               @openFile="fileOpen"
             />
@@ -72,42 +73,19 @@
     @toggleLock="bookmarkLockToggle"
   />
 
-  <InputModal
-    ref="copyFileModal"
-    title="Copy file(s)"
-    @apply="fileCopyHandler"
-  />
+  <ListRowContextMenu ref="listRowContextMenu"/>
 
-  <InputModal
-    ref="createFolderModal"
-    title="Create new directory"
-    @apply="folderCreateHandler"
-  />
+  <InputModal ref="copyFileModal" title="Copy file(s)" @apply="fileCopyHandler"/>
 
-  <InputModal
-    ref="deleteModal"
-    title="Remove file/directory"
-    :hideInput="true"
-    @apply="fileRemoveHandler"
-  />
+  <InputModal ref="createFolderModal" title="Create new directory" @apply="folderCreateHandler"/>
 
-  <InputModal
-    ref="moveFileModal"
-    title="Move file(s)"
-    @apply="fileMoveHandler"
-  />
+  <InputModal ref="deleteModal" title="Remove file/directory" :hideInput="true" @apply="fileRemoveHandler"/>
 
-  <InputModal
-    ref="renameFileModal"
-    title="Rename file"
-    @apply="fileRenameHandler"
-  />
+  <InputModal ref="moveFileModal" title="Move file(s)" @apply="fileMoveHandler"/>
 
-  <InputModal
-    ref="renameTabModal"
-    title="Rename tab"
-    @apply="bookmarkRenameHandler"
-  />
+  <InputModal ref="renameFileModal" title="Rename file" @apply="fileRenameHandler"/>
+
+  <InputModal ref="renameTabModal" title="Rename tab" @apply="bookmarkRenameHandler"/>
 
   <FileInfoModal ref="fileInfo"/>
 
@@ -125,9 +103,10 @@ import {MovingMixin} from "./commander/mixins/moving-mixin.js";
 import {FileOperationsMixin} from "./commander/mixins/file-operations-mixin.js";
 import TableHeadCol from "./commander/TableHeadCol.vue";
 import FileQueueModal from "./default-components/FileQueueModal.vue";
+import ListRowContextMenu from "./commander/ListRowContextMenu.vue";
 
 export default {
-  components: {FileQueueModal, TableHeadCol, BookmarkElement, BookmarkContextMenu, FileInfoModal, InputModal, ListRow},
+  components: {ListRowContextMenu, FileQueueModal, TableHeadCol, BookmarkElement, BookmarkContextMenu, FileInfoModal, InputModal, ListRow},
   data() {
     return {
       header: [
@@ -179,6 +158,16 @@ export default {
       }
 
       return this;
+    },
+    openRowContextMenu(data) {
+      // Set active panel
+      this.panels.active = data.panel;
+      const bookmark = this.getBookmark(data.panel);
+      bookmark.files.inserted = []
+      // Set selected file position
+      bookmark.files.selected = data.i;
+
+      console.log(data.event);
     },
     /**
      * Set column order
