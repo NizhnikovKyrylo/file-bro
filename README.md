@@ -38,16 +38,13 @@
   - ~~bottom panel~~
   - context menu
     - ~~open~~
-    - move
-    - copy
-    - delete
-    - rename
-    - ========
+    - ~~move~~
+    - ~~delete~~
+    - ~~rename~~
     - cut
     - copy
     - paste
-    - ========
-    - show file properties
+    - ~~show file properties~~
 - Select All files
 - Unselect all files
 - Pack

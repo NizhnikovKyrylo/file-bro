@@ -6,10 +6,10 @@
     <li @click="move">
       <span>Move</span>
     </li>
-    <li>
+    <li @click="remove">
       <span>Delete</span>
     </li>
-    <li class="separator">
+    <li class="separator" @click="rename">
       <span>Rename</span>
     </li>
     <li>
@@ -21,7 +21,7 @@
     <li class="separator">
       <span>Paste</span>
     </li>
-    <li>
+    <li @click="info">
       <span>Properties</span>
     </li>
   </ul>
@@ -45,13 +45,27 @@ export default {
     };
   },
   methods: {
+    /**
+     * Get the file or folder info
+     */
+    info() {
+      this.show = false;
+      const bookmark = this.$parent.panels[this.panel].bookmarks[this.bookmark];
+      bookmark.files.inserted = []
+      this.$parent.fileInfo(bookmark.files.list[this.index]);
+    },
+    /**
+     * Move a file or a folder to another folder
+     */
     move() {
-
+      this.show = false;
+      this.$parent.fileMoveShowModal()
     },
     /**
      * Open folder
      */
     open() {
+      this.show = false;
       const bookmark = this.$parent.panels[this.panel].bookmarks[this.bookmark];
       const file = bookmark.files.list[this.index]
       if (file.isDir) {
@@ -59,7 +73,20 @@ export default {
       } else {
         window.open(window.location.origin + this.$parent.getConfig().basePath + file.path + file.basename, '_blank');
       }
+    },
+    /**
+     * Remove a file or a folder
+     */
+    remove() {
       this.show = false;
+      this.$parent.fileRemoveShowModal()
+    },
+    /**
+     * Rename file or folder
+     */
+    rename() {
+      this.show = false;
+      this.$parent.fileRenameShowModal()
     }
   }
 }

@@ -167,7 +167,6 @@ export default {
       // Set active panel
       this.panels.active = data.panel;
       const bookmark = this.getBookmark(data.panel);
-      bookmark.files.inserted = []
       // Set selected file position
       bookmark.files.selected = data.i;
 
