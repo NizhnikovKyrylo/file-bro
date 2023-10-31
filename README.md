@@ -37,8 +37,7 @@
   - ~~Sort/Change file order~~
   - ~~bottom panel~~
   - context menu
-    - open
-    - ========
+    - ~~open~~
     - move
     - copy
     - delete

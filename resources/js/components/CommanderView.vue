@@ -159,6 +159,10 @@ export default {
 
       return this;
     },
+    /**
+     * Show the context menu of the list row
+     * @param data
+     */
     openRowContextMenu(data) {
       // Set active panel
       this.panels.active = data.panel;
@@ -167,7 +171,12 @@ export default {
       // Set selected file position
       bookmark.files.selected = data.i;
 
-      console.log(data.event);
+      this.$refs.listRowContextMenu.top = data.event.pageY;
+      this.$refs.listRowContextMenu.left = data.event.pageX;
+      this.$refs.listRowContextMenu.panel = data.panel;
+      this.$refs.listRowContextMenu.bookmark = this.panels[data.panel].bookmarks.findIndex(item => item.active);
+      this.$refs.listRowContextMenu.index = data.i;
+      this.$refs.listRowContextMenu.show = true
     },
     /**
      * Set column order
