@@ -1,29 +1,13 @@
 <template>
   <ul class="context-menu" v-if="show" :style="{left: left + 'px', top: top + 'px'}" v-click-out-side="() => {show = false}">
-    <li class="separator" @click="open">
-      <span>Open</span>
-    </li>
-    <li @click="move">
-      <span>Move</span>
-    </li>
-    <li @click="remove">
-      <span>Delete</span>
-    </li>
-    <li class="separator" @click="rename">
-      <span>Rename</span>
-    </li>
-    <li>
-      <span>Cut</span>
-    </li>
-    <li>
-      <span>Copy</span>
-    </li>
-    <li class="separator">
-      <span>Paste</span>
-    </li>
-    <li @click="info">
-      <span>Properties</span>
-    </li>
+    <li class="separator" @click="open"><span>Open</span></li>
+    <li @click="move"><span>Move</span></li>
+    <li @click="remove"><span>Delete</span></li>
+    <li class="separator" @click="rename"><span>Rename</span></li>
+    <li @click="copyOrCut(1)"><span>Cut</span></li>
+    <li @click="copyOrCut(0)"><span>Copy</span></li>
+    <li class="separator" @click="paste"><span>Paste</span></li>
+    <li @click="info"><span>Properties</span></li>
   </ul>
 </template>
 
@@ -44,7 +28,21 @@ export default {
       show: false
     };
   },
+  emits: ['paste'],
   methods: {
+    copyOrCut(cut) {
+      this.show = false;
+      const bookmark = this.$parent.panels[this.panel].bookmarks[this.bookmark];
+
+      sessionStorage.setItem('fileBrowserBuffer', JSON.stringify({
+        cut: cut,
+        panel: this.panel,
+        bookmark: this.bookmark,
+        indexes: bookmark.files.inserted.length ? bookmark.files.inserted : [bookmark.files.selected]
+      }))
+
+      bookmark.files.inserted = []
+    },
     /**
      * Get the file or folder info
      */
@@ -72,6 +70,16 @@ export default {
         this.$parent.folderContent(bookmark, file)
       } else {
         window.open(window.location.origin + this.$parent.getConfig().basePath + file.path + file.basename, '_blank');
+      }
+    },
+    paste() {
+      this.show = false;
+      if (null !== sessionStorage.getItem('fileBrowserBuffer')) {
+        try {
+          const buffer = JSON.parse(sessionStorage.getItem('fileBrowserBuffer'))
+
+          this.$emit('paste', this.panel, this.bookmark, buffer)
+        } catch (e) {}
       }
     },
     /**

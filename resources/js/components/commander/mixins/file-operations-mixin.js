@@ -370,6 +370,9 @@ export const FileOperationsMixin = {
         bookmark.files.inserted = [];
       });
     },
+    pasteFiles(panel, bookmark, data) {
+      console.log(panel, bookmark, data)
+    },
     /**
      * Sort files
      * @param files

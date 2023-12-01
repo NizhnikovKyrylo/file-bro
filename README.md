@@ -41,8 +41,8 @@
     - ~~move~~
     - ~~delete~~
     - ~~rename~~
-    - cut
-    - copy
+    - ~~cut~~
+    - ~~copy~~
     - paste
     - ~~show file properties~~
 - Select All files

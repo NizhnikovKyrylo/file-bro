@@ -73,7 +73,7 @@
     @toggleLock="bookmarkLockToggle"
   />
 
-  <ListRowContextMenu ref="listRowContextMenu"/>
+  <ListRowContextMenu ref="listRowContextMenu" @paste="pasteFiles"/>
 
   <InputModal ref="copyFileModal" title="Copy file(s)" @apply="fileCopyHandler"/>
 
